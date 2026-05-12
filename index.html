@@ -564,7 +564,7 @@
 
      Stage 3 polish: per user feedback, stamps now ride on a SOLID
      black background (not a translucent tint over gameplay). Reads
-     much cleaner \u2014 the world stops, the headline lands, then
+     much cleaner — the world stops, the headline lands, then
      the debrief takes over.
      ============================================================ */
   .result-stamp-overlay {
@@ -651,7 +651,7 @@
   .result-stamp-overlay.transportComplete .result-stamp-sub  { color: #ffffff; }
   .result-stamp-overlay.outOfService .result-stamp-main { color: #ef4444; }
   .result-stamp-overlay.outOfService .result-stamp-sub  { color: #ef4444; opacity: 0.75; letter-spacing: 7px; }
-  /* Stage 3: SHIFT COMPLETE banner palette \u2014 green like a saved-call
+  /* Stage 3: SHIFT COMPLETE banner palette — green like a saved-call
      stamp, but bigger letter-spacing on the sub line for the
      "good work" wrap-up vibe. */
   .result-stamp-overlay.shiftComplete .result-stamp-main { color: #06d6a0; }
@@ -694,6 +694,20 @@
     65%  { opacity: 1; transform: scale(1.03) rotate(0deg);   filter: blur(0); }
     100% { opacity: 0; transform: scale(1.10) rotate(0deg);   filter: blur(0); }
   }
+  /* Stage 3: gentle pulse for the in-encounter STOP AUTO-TREAT button so
+     it draws the eye while the auto-demo is running. */
+  @keyframes stopAutoTreatPulse {
+    0%, 100% {
+      box-shadow: 0 0 16px rgba(239,71,111,0.85),
+                  0 0 32px rgba(239,71,111,0.45);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 22px rgba(239,71,111,1.0),
+                  0 0 48px rgba(239,71,111,0.65);
+      transform: scale(1.04);
+    }
+  }
   @keyframes resultStampSubFade {
     0%   { opacity: 0; transform: translateY(14px); }
     25%  { opacity: 1; transform: translateY(0); }
@@ -733,8 +747,8 @@
     94%  { background: #000000; }
     100% { background: rgba(0, 0, 0, 0); }
   }
-  /* Heartbeat \u2192 flatline draw. The path data is one big QRS bump on
-     the left, then a long flat line to the right. Dashoffset 2000 \u2192 0
+  /* Heartbeat → flatline draw. The path data is one big QRS bump on
+     the left, then a long flat line to the right. Dashoffset 2000 → 0
      draws it left to right. */
   @keyframes resultFlatlineDraw {
     0%   { stroke-dashoffset: 2000; }
@@ -1890,7 +1904,7 @@
     font-size: 11px; font-weight: bold; letter-spacing: 1.5px;
     border-radius: 4px; z-index: 6; display: none; cursor: pointer;
     box-shadow: 0 0 12px rgba(6, 214, 160, 0.35);
-  ">\uD83D\uDCFB AUTO-RADIO DISPATCH</button>
+  ">📻 AUTO-RADIO DISPATCH</button>
   <!-- Stage 1.5: scene safety warning banner. -->
   <div id="scene-safety" style="
     position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
@@ -2152,14 +2166,13 @@
                style="width:14px; height:14px; cursor:pointer; accent-color:#ffd166;">
         <span>Walkthrough on first call</span>
       </label>
-      <!-- Stage 3: Auto-Treatment toggle. When checked, the player\u2019s
-           first call has the assess + treat sequence auto-performed by
-           the system so a new player can SEE how a scene should run
-           (one action at a time, mirroring the auto-radio pacing).
-           Stops at the transport decision \u2014 the player picks the
-           hospital and committed disposition on their own. Default ON
-           for new players; auto-unchecks after one use, same pattern
-           as the walkthrough toggle. -->
+      <div style="font-family:'Courier New',monospace; font-size:10px;
+                  color:#a8b0c4; max-width:520px; margin-top:4px;
+                  line-height:1.5; opacity:0.85; padding:0 4px;">
+        Shows a step-by-step bubble teaching the UI flow — dispatch →
+        drive → scene → assess → treat → transport →
+        clear. Helps new players learn the structure of a call.
+      </div>
       <label id="title-autotreat-toggle" style="
           display:inline-flex; align-items:center; gap:10px; margin-top:8px;
           padding:8px 14px; border:1px dashed #3a3a4e; border-radius:4px;
@@ -2168,8 +2181,26 @@
           cursor:pointer; user-select:none; text-transform:uppercase;">
         <input type="checkbox" id="title-autotreat-cb" checked
                style="width:14px; height:14px; cursor:pointer; accent-color:#06d6a0;">
-        <span>Auto-treatment on first call</span>
+        <span>Auto-treatment on all calls</span>
       </label>
+      <div style="font-family:'Courier New',monospace; font-size:10px;
+                  color:#a8b0c4; max-width:520px; margin-top:4px;
+                  line-height:1.5; opacity:0.85; padding:0 4px;">
+        The game runs the SCENE → ASSESS → TALK → TREAT
+        sequence for you, one action at a time, so you can WATCH how a
+        call should be run per the lab notebook. You still pick the
+        transport disposition and hospital.
+      </div>
+      <!-- Stage 3: shared rationale below both toggles — spells out
+           why these features are here for first-time players. -->
+      <div style="font-family:'Courier New',monospace; font-size:10px;
+                  color:#ffd166; max-width:520px; margin-top:10px;
+                  line-height:1.5; padding:0 4px;
+                  text-transform:uppercase; letter-spacing:1px;
+                  opacity:0.9;">
+        ✨ Both features are designed to help new players learn the
+        flow of a call — turn them off once you’ve got it.
+      </div>
     </div>
     <!-- Ship 3: small computer-only warning, bottom-center of the title
          screen. The game requires WASD keys for driving and a mouse for
@@ -2836,8 +2867,8 @@
     <div class="case-card">
       <span class="role-tag" id="enc-role">EMT</span>
       <h2 id="enc-title">Patient Encounter</h2>
-      <p id="enc-desc">Loading call details\u2026</p>
-      <div class="vitals" id="enc-vitals">\u2014</div>
+      <p id="enc-desc">Loading call details…</p>
+      <div class="vitals" id="enc-vitals">—</div>
     </div>
     <!-- Stage 1.5: Partner Quiz panel. Hidden by default; shown when the
          player clicks START ASSESSMENT and the current call has a quiz.
@@ -2894,6 +2925,24 @@
         <div class="pkm-meta-strip">
           <span class="pkm-pill" id="pkm-role-pill">EMT</span>
           <span class="pkm-pill" id="pkm-turn-pill">TURN 1</span>
+          <!-- Stage 3: STOP AUTO-TREAT button. Visible only while the
+               auto-treatment runner is firing actions. Click → sets
+               a cancel flag the runner polls each tick, hands control
+               back to the player mid-demo. Hidden otherwise. Inline
+               styles so it slots into the pkm-meta-strip without a
+               separate CSS class. -->
+          <button id="pkm-stop-autotreat-btn" style="
+              display:none; background:#ef476f;
+              border:2px solid #ffffff; color:#ffffff;
+              padding:7px 16px; font-family:inherit;
+              font-size:12px; font-weight:bold; letter-spacing:1.5px;
+              border-radius:4px; cursor:pointer;
+              text-transform:uppercase;
+              box-shadow:0 0 16px rgba(239,71,111,0.85),
+                         0 0 32px rgba(239,71,111,0.45);
+              animation: stopAutoTreatPulse 1.1s ease-in-out infinite;">
+            ⏹ STOP AUTO-TREAT
+          </button>
           <button class="pkm-finish-btn" id="pkm-finish-btn">&#x21A9; BACK TO SCENE</button>
         </div>
         <!-- Stage 2.0g: in-encounter chat FAB. Click opens the chat panel
@@ -3006,7 +3055,7 @@
        Auto-hides after ~1.8s (3.2s for outOfService); pointer-events:none so
        the Continue button stays clickable. -->
   <div class="result-stamp-overlay" id="result-stamp-overlay">
-    <!-- Heartbeat \u2192 flatline strip behind the title. Only visible on
+    <!-- Heartbeat → flatline strip behind the title. Only visible on
          the .outOfService variant. The dashoffset animation in CSS draws
          a single QRS bump then a long flat line. -->
     <div class="result-stamp-flatline" id="result-stamp-flatline">
@@ -5427,6 +5476,11 @@ function inferCallTags(call, role) {
   // surfaced postictal-flail hazards on MVC scenes. Use a negative lookbehind
   // to skip "no LOC" / "denies LOC".
   if (/stroke|seizure|altered|head injur|concussion|hypoglyc|diabetic|low blood sugar|insulin reaction|altered mental status|ams\b|(?<!no )(?<!denies )(?<!without )loc\b/i.test(t)) tags.push('neuro');
+  // Stage 3: separate 'seizure' sub-tag for hazard pool selection. Only
+  // calls actually involving a seizure / postictal phase get the
+  // seizure-flail hazard; other neuro calls (stroke, hypoglycemia, AMS,
+  // syncope) get the generic neuro pool.
+  if (/seizure|seizing|convuls|postictal|epilep/.test(t)) tags.push('seizure');
   if (/abdominal|weakness|dehydration|nausea|vomit|wellness|geriatric|epistax|nosebleed|generalized/.test(t)) tags.push('medical');
   if (/od\b|overdose|opioid|intox|alcohol|etoh|poisoning|toxic/.test(t)) tags.push('tox');
   if (/psych|suicid|anxiety|panic/.test(t)) tags.push('psych');
@@ -15215,7 +15269,23 @@ const PKM_HAZARDS = {
     { dmg: 5, text: 'A hot fragment from the patient\u2019s clothing brushes your wrist.' },
   ],
   neuro:    [
+    // Stage 3 fix: removed postictal-flail as the only neuro hazard \u2014
+    // it was firing on stroke / hypoglycemia / AMS / head-injury / syncope
+    // calls where there is no postictal phase. Postictal flail now lives
+    // in the seizure-specific pool below; the neuro pool gets
+    // hazard variants appropriate to any neuro patient.
+    { dmg: 3, text: 'Patient is altered and grabs your wrist hard \u2014 awkward twist.' },
+    { dmg: 4, text: 'Disoriented patient stands abruptly \u2014 their shoulder catches your jaw.' },
+    { dmg: 3, text: 'You crouch on uneven floor and torque your knee getting to the patient.' },
+  ],
+  // Stage 3: seizure-specific pool. Only fires for calls actually tagged
+  // 'seizure' (added by the tagger when dispatch text mentions seizure /
+  // postictal / convulsion). pkmMaybeRollSceneHazard prefers this pool
+  // over the generic neuro pool when both apply.
+  seizure:  [
     { dmg: 3, text: 'Patient flails during a postictal phase \u2014 forearm to your chest.' },
+    { dmg: 4, text: 'Patient seizes again briefly \u2014 you catch a knee guarding their head.' },
+    { dmg: 3, text: 'You twist your back guiding the patient into recovery position.' },
   ],
   // Generic fallback used when no specific tag matches.
   generic:  [
@@ -17490,33 +17560,64 @@ function pkmApplyDecay() {
   for (let i = 0; i < stabilizers.length; i++) {
     if (given[stabilizers[i]]) return false;       // stabilized
   }
-  // Stage 2.0h/2.0n: ABC penalty. If the patient is critical (HP below 35)
-  // AND the player just took a TALK or ASSESS-only action instead of
-  // treating, decay accelerates AND a critical failure may be logged.
-  // First offense: double decay + scolding (educational warning).
-  // Second offense: full critical failure — patient takes a big chunk of
-  // damage (silly mistake that costs them).
-  // Third+ offense: severe critical failure — could outright fail the call.
+  // Stage 2.0h/2.0n/3: ABC penalty. Reworked per user feedback. The old
+  // rule punished ANY assess/talk action at <35% HP, which killed the
+  // patient during the textbook initial assessment (general impression,
+  // AVPU, vitals \u2014 all required before treatment). That's the
+  // OPPOSITE of how the lab notebook says to run a call.
+  //
+  // The new rule fires only when ALL of these are true:
+  //   1. Patient is in TRUE critical territory (HP < 20, not 35)
+  //   2. The player has already done the initial assessment (general
+  //      impression OR AVPU OR full vitals), so they know it's bad
+  //   3. The CURRENT action is a non-life-saving assess/talk item
+  //      (i.e. NOT the things you need to do first — GI, AVPU, vitals,
+  //      airway/breathing/circ checks)
+  //   4. The player has not done ANY treat action in the last 3 turns
+  //
+  // In other words: the penalty fires when the player is STALLING with
+  // history-taking on a coding patient, NOT when they're working through
+  // their normal initial assessment.
   let decay = profile.decayPerTurn;
   const taken = game.pkm.actionsTaken || [];
   const last = taken[taken.length - 1];
-  const isCritical = (game.pkm.ptHpPct || 0) < 35;
-  if (isCritical && last && (last.category === 'talk' || last.category === 'assess')) {
-    decay = decay * 2;
+  const isTrulyCritical = (game.pkm.ptHpPct || 0) < 20;
+  // Required initial-assessment actions \u2014 these never count as ABC neglect.
+  const safeAssessLabels = new Set([
+    'General impression', 'AVPU / mental status', 'Full vitals',
+    'Lung sounds', 'Skin signs', 'Blood glucose',
+    'Airway check', 'Breathing check', 'Circulation check',
+    'Stroke screen (BE-FAST)', 'Rapid trauma exam (DCAP-BTLS)',
+    'APGAR score (newborn)', '4-lead monitor',
+  ]);
+  const lastIsSafeAssess = last && last.category === 'assess' &&
+                           safeAssessLabels.has(last.label);
+  // Has the player treated within the last 3 turns?
+  let recentTreat = false;
+  for (let ti = taken.length - 1; ti >= Math.max(0, taken.length - 3); ti--) {
+    if (taken[ti].category === 'treat') { recentTreat = true; break; }
+  }
+  // Has the player done the basic initial assessment yet?
+  const cp2 = game.pkm.clinicalProgress || {};
+  const initialDone = cp2.generalImpression || cp2.loc || cp2.vitalsObtained;
+  const stallingOnHistory = isTrulyCritical && initialDone && !recentTreat &&
+    last && (last.category === 'talk' ||
+             (last.category === 'assess' && !lastIsSafeAssess));
+  if (stallingOnHistory) {
+    decay = decay * 1.5;       // softer multiplier than the old 2x
     game.pkm._abcOffenses = (game.pkm._abcOffenses || 0) + 1;
     if (game.pkm._abcOffenses === 1) {
-      pkmDialogue('<i style="color:#ef4444;"><b>You\u2019re asking questions while ABCs go untreated.</b></i>', 'system');
+      pkmDialogue('<i style="color:#ef4444;"><b>Patient is critical \u2014 stop taking history and start treating.</b></i>', 'system');
     } else if (game.pkm._abcOffenses === 2) {
-      // Bigger penalty — silly mistake costs HP outright.
       pkmRecordCriticalFailure(
         'abc_neglect_2',
         'Critical airway/breathing/circulation neglect \u2014 patient deteriorating while you take history.',
-        15);
+        10);                    // softer damage (was 15)
     } else {
       pkmRecordCriticalFailure(
         'abc_neglect_severe',
         'Severe ABC neglect \u2014 you\u2019re losing this patient because you won\u2019t intervene.',
-        30);
+        20);                    // softer damage (was 30)
     }
   }
   // Apply decay
@@ -23691,15 +23792,62 @@ async function _pkmRunSkillWalkthrough(label, tags) {
 // Actions that don't apply to the patient profile fall through pkmDoAction's
 // "no-effect" path with reasonable narration; the demo skips them gracefully.
 let _autoTreatRunning = false;
+let _autoTreatCancel = false;       // Stage 3: set by STOP AUTO-TREAT button
+function _showStopAutoTreatBtn(on) {
+  try {
+    const btn = document.getElementById('pkm-stop-autotreat-btn');
+    if (btn) btn.style.display = on ? 'inline-block' : 'none';
+  } catch (_e) {}
+}
+function _cancelAutoTreatment() {
+  _autoTreatCancel = true;
+  _showStopAutoTreatBtn(false);
+  try {
+    if (typeof pkmDialogue === 'function') {
+      pkmDialogue('<i style="color:#06d6a0;">\uD83D\uDCAB AUTO-TREAT: Cancelled by player \u2014 you\u2019re in control now.</i>', 'system');
+    }
+  } catch (_e) {}
+}
+// Wire the cancel button once on boot. Safe to call multiple times \u2014
+// the _wired flag prevents double-binding.
+try {
+  const _wireStopBtn = () => {
+    const btn = document.getElementById('pkm-stop-autotreat-btn');
+    if (btn && !btn._wired) {
+      btn._wired = true;
+      btn.addEventListener('click', _cancelAutoTreatment);
+    }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _wireStopBtn);
+  } else {
+    _wireStopBtn();
+  }
+} catch (_e) {}
+
 function _kickAutoTreatmentIfNeeded(dispatch) {
   if (!game || !game.pkm) return;
   if (_autoTreatRunning) return;                          // already running
-  if (game._autoTreatFiredThisShift) return;              // once per shift
-  if (typeof _autotreatFirstCallEnabled !== 'function') return;
-  if (!_autotreatFirstCallEnabled()) return;
-  game._autoTreatFiredThisShift = true;
-  // Flip the toggle off so the player has to opt back in for another demo.
-  try { _setAutotreatFirstCallEnabled(false); } catch (_e) {}
+  // Stage 3 v3 per user request: the toggle is "on for first call of a
+  // brand-new player's session; auto-off for the next shift; but fires
+  // on EVERY call within the active shift it's on for."
+  //
+  // Implementation: the persistent localStorage toggle is a one-shot.
+  // The first time _kickAutoTreatmentIfNeeded sees it true, we latch an
+  // in-memory `_autoTreatActiveThisShift` flag AND auto-uncheck the
+  // persistent toggle so next shift starts off. While the in-memory
+  // flag stays true, every patient encounter in this shift fires the
+  // demo. The flag resets to false at start of next shift.
+  if (!game._autoTreatActiveThisShift) {
+    if (typeof _autotreatFirstCallEnabled !== 'function') return;
+    if (!_autotreatFirstCallEnabled()) return;
+    // Latch in-memory flag for this shift, auto-uncheck persistent.
+    game._autoTreatActiveThisShift = true;
+    try { _setAutotreatFirstCallEnabled(false); } catch (_e) {}
+  }
+  // Guard against re-firing on encounter re-entry within the same call.
+  if (game._autoTreatFiredForThisEncounter === dispatch) return;
+  game._autoTreatFiredForThisEncounter = dispatch;
   _autoTreatRunning = true;
   // Stage the demo on a small delay so the encounter UI has time to
   // render before the first action fires.
@@ -23708,6 +23856,8 @@ function _kickAutoTreatmentIfNeeded(dispatch) {
 
 async function _runAutoTreatment(dispatch) {
   try {
+    _autoTreatCancel = false;        // fresh run, fresh flag
+    _showStopAutoTreatBtn(true);     // reveal the cancel button
     const role = (game.role || 'EMT').toUpperCase();
     const tags = (game.pkm && game.pkm.callTags) || [];
     const has  = (k) => tags.indexOf(k) !== -1;
@@ -23716,8 +23866,8 @@ async function _runAutoTreatment(dispatch) {
         pkmDialogue('<i style="color:#06d6a0;">\uD83D\uDCAB AUTO-TREAT: ' + text + '</i>', 'system');
       } } catch (_e) {}
     };
-    banner('Demo mode \u2014 watch how to run this call. Transport decision is yours.');
-    await pkmSleep(1400);
+    banner('Demo mode — watch how to run this call. Transport decision is yours.');
+    await pkmSleep(3600);
     // --- Build the action list, tag-aware ----------------------------
     // Universal SCENE size-up (all calls).
     const seq = [];
@@ -23787,13 +23937,15 @@ async function _runAutoTreatment(dispatch) {
     seq.push({ cat: 'assess', label: 'Full vitals' });
     // --- Run the sequence -----------------------------------------------
     for (let i = 0; i < seq.length; i++) {
+      if (_autoTreatCancel) break;       // Stage 3: respect STOP button
       if (!game.pkm || game.pkm.patientDead || game.pkm.dispoChosen) break;
       const step = seq[i];
       // CONTINUE ONTO SCENE flip.
       if (step.continue) {
-        await pkmSleep(900);
+        await pkmSleep(2400);
+        if (_autoTreatCancel) break;
         try { if (typeof pkmContinueOntoScene === 'function') pkmContinueOntoScene(); } catch (_e) {}
-        await pkmSleep(900);
+        await pkmSleep(2400);
         continue;
       }
       // Skip if not in the role's menu for this category.
@@ -23805,22 +23957,27 @@ async function _runAutoTreatment(dispatch) {
       // Wait for the previous action to release the lock.
       let waits = 0;
       while (game.pkm && game.pkm._actionLocked && waits < 40) {
-        await pkmSleep(150);
+        if (_autoTreatCancel) break;
+        await pkmSleep(180);
         waits++;
       }
+      if (_autoTreatCancel) break;
       if (!game.pkm || game.pkm.patientDead || game.pkm.dispoChosen) break;
       try {
         if (typeof pkmDoAction === 'function') {
           await pkmDoAction(step.cat, step.label);
         }
       } catch (_eDo) {}
-      await pkmSleep(1100);
+      await pkmSleep(3100);
     }
-    banner('Demo complete \u2014 you\u2019re back in control. Pick a transport disposition when ready.');
+    if (!_autoTreatCancel) {
+      banner('Demo complete \u2014 you\u2019re back in control. Pick a transport disposition when ready.');
+    }
   } catch (_e) {
     // Demo errors should never crash the encounter.
   } finally {
     _autoTreatRunning = false;
+    _showStopAutoTreatBtn(false);   // hide cancel button at end
   }
 }
 
@@ -48629,6 +48786,11 @@ function startShift() {
   // Stage 2.7: crewRemaining must match the actual rig size (rescue=4, others=2)
   // so rescue rigs don't trigger crew-down logic prematurely.
   game.crewRemaining = (game.vehicle === 'rescue') ? 4 : 2;
+  // Stage 3: reset auto-treatment per-shift flags so the next shift
+  // re-reads the persistent toggle from scratch (which is now off after
+  // a one-shift session) and clears the per-encounter guard.
+  game._autoTreatActiveThisShift = false;
+  game._autoTreatFiredForThisEncounter = null;
   game.parkedVehicle = null;
   game.sceneAssist = null;
   game.medic = null;
