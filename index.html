@@ -2152,6 +2152,24 @@
                style="width:14px; height:14px; cursor:pointer; accent-color:#ffd166;">
         <span>Walkthrough on first call</span>
       </label>
+      <!-- Stage 3: Auto-Treatment toggle. When checked, the player\u2019s
+           first call has the assess + treat sequence auto-performed by
+           the system so a new player can SEE how a scene should run
+           (one action at a time, mirroring the auto-radio pacing).
+           Stops at the transport decision \u2014 the player picks the
+           hospital and committed disposition on their own. Default ON
+           for new players; auto-unchecks after one use, same pattern
+           as the walkthrough toggle. -->
+      <label id="title-autotreat-toggle" style="
+          display:inline-flex; align-items:center; gap:10px; margin-top:8px;
+          padding:8px 14px; border:1px dashed #3a3a4e; border-radius:4px;
+          background:rgba(20,22,32,0.55); font-family:'Courier New',monospace;
+          color:#f4f1de; font-size:11px; letter-spacing:1.5px;
+          cursor:pointer; user-select:none; text-transform:uppercase;">
+        <input type="checkbox" id="title-autotreat-cb" checked
+               style="width:14px; height:14px; cursor:pointer; accent-color:#06d6a0;">
+        <span>Auto-treatment on first call</span>
+      </label>
     </div>
     <!-- Ship 3: small computer-only warning, bottom-center of the title
          screen. The game requires WASD keys for driving and a mouse for
@@ -15912,7 +15930,15 @@ function _renderPatientNotesPopupBody() {
   const refusalActive = !!(chatState && chatState.patientActive);
   const isRefusal = refusalActive || (lastDispo && lastDispo.kind === 'refusal');
   const alsActive = !!(chatState && chatState.medicActive);
+  // Stage 3 fix: the form was previously locked to refusal even after the
+  // player committed an ALS handoff, because the ALS context flag only
+  // flipped once chatState.medicActive was set (after the medic spawned)
+  // or once the disposition landed in sceneState (after delivery). The
+  // player\u2019s pkm.dispoChosen flag flips the moment they CLICK an ALS
+  // button \u2014 well before either of those \u2014 so we read it too.
+  const dispoChosen = (game.pkm && game.pkm.dispoChosen) || null;
   const isAlsContext = alsActive ||
+    dispoChosen === 'callAls' ||
     (lastDispo && lastDispo.kind === 'als') ||
     (game.destination && game.destination.kind === 'hospital');
   // Pull facts.
@@ -17258,6 +17284,14 @@ function openPkmEncounter() {
         initFirstCallWalkthroughIfNeeded(dispatch);
       }
     } catch (_e4b) {}
+    // Stage 3: also kick the auto-treatment demo if its toggle is on.
+    // Fires only on the first encounter of the shift; auto-unchecks the
+    // toggle so the player has to opt back in for another demo.
+    try {
+      if (typeof _kickAutoTreatmentIfNeeded === 'function') {
+        _kickAutoTreatmentIfNeeded(dispatch);
+      }
+    } catch (_eAT) {}
   } else {
     game.pkm.active = true;
     // Restore the bubble on re-entry if it was active.
@@ -18415,6 +18449,27 @@ function _walkthroughFirstCallEnabled() {
 function _setWalkthroughFirstCallEnabled(on) {
   try {
     localStorage.setItem(WALKTHROUGH_TOGGLE_STORAGE_KEY, on ? '1' : '0');
+  } catch (_e) {}
+}
+
+// Stage 3: auto-treatment toggle. Mirrors the walkthrough toggle pattern
+// \u2014 default on, auto-unchecks after one use, sourced from the
+// title-screen checkbox. When on, the first patient encounter of the
+// shift has the SCENE \u2192 ASSESS \u2192 TALK \u2192 TREAT sequence
+// performed automatically (one action per beat) so the player can WATCH
+// how a call should be run. Stops at the transport decision \u2014 the
+// player picks the hospital and commits the disposition themselves.
+const AUTOTREAT_TOGGLE_STORAGE_KEY = 'emsq_autotreat_first_call_toggle_v1';
+function _autotreatFirstCallEnabled() {
+  try {
+    const v = localStorage.getItem(AUTOTREAT_TOGGLE_STORAGE_KEY);
+    if (v === null) return true;   // default on
+    return v === '1';
+  } catch (_e) { return true; }
+}
+function _setAutotreatFirstCallEnabled(on) {
+  try {
+    localStorage.setItem(AUTOTREAT_TOGGLE_STORAGE_KEY, on ? '1' : '0');
   } catch (_e) {}
 }
 
@@ -19636,6 +19691,15 @@ function _wireGameWalkthroughOnce() {
       wtCb.checked = _walkthroughFirstCallEnabled();
       wtCb.addEventListener('change', () => {
         _setWalkthroughFirstCallEnabled(!!wtCb.checked);
+      });
+    }
+    // Stage 3: same wiring for the auto-treatment toggle.
+    const atCb = document.getElementById('title-autotreat-cb');
+    if (atCb && !atCb._wired) {
+      atCb._wired = true;
+      atCb.checked = _autotreatFirstCallEnabled();
+      atCb.addEventListener('change', () => {
+        _setAutotreatFirstCallEnabled(!!atCb.checked);
       });
     }
   } catch (_eWtToggle) {}
@@ -23615,6 +23679,155 @@ async function _pkmRunSkillWalkthrough(label, tags) {
     return;
   }
 }
+// Stage 3: Auto-Treatment demo. When the title-screen toggle is checked,
+// the first encounter of a shift has SCENE \u2192 ASSESS \u2192 TALK \u2192
+// TREAT auto-fired by the system, one action per beat (~1.6s gap) so a
+// new player can WATCH how a call should be run. Stops at the disposition
+// menu \u2014 the player chooses transport / refusal / ALS handoff
+// themselves. Hospital selection is also fully manual.
+//
+// Tag-aware action sequences keyed off game.pkm.callTags. Each entry is
+// a {category, label} pair that gets passed straight to pkmDoAction.
+// Actions that don't apply to the patient profile fall through pkmDoAction's
+// "no-effect" path with reasonable narration; the demo skips them gracefully.
+let _autoTreatRunning = false;
+function _kickAutoTreatmentIfNeeded(dispatch) {
+  if (!game || !game.pkm) return;
+  if (_autoTreatRunning) return;                          // already running
+  if (game._autoTreatFiredThisShift) return;              // once per shift
+  if (typeof _autotreatFirstCallEnabled !== 'function') return;
+  if (!_autotreatFirstCallEnabled()) return;
+  game._autoTreatFiredThisShift = true;
+  // Flip the toggle off so the player has to opt back in for another demo.
+  try { _setAutotreatFirstCallEnabled(false); } catch (_e) {}
+  _autoTreatRunning = true;
+  // Stage the demo on a small delay so the encounter UI has time to
+  // render before the first action fires.
+  setTimeout(() => { _runAutoTreatment(dispatch); }, 1200);
+}
+
+async function _runAutoTreatment(dispatch) {
+  try {
+    const role = (game.role || 'EMT').toUpperCase();
+    const tags = (game.pkm && game.pkm.callTags) || [];
+    const has  = (k) => tags.indexOf(k) !== -1;
+    const banner = (text) => {
+      try { if (typeof pkmDialogue === 'function') {
+        pkmDialogue('<i style="color:#06d6a0;">\uD83D\uDCAB AUTO-TREAT: ' + text + '</i>', 'system');
+      } } catch (_e) {}
+    };
+    banner('Demo mode \u2014 watch how to run this call. Transport decision is yours.');
+    await pkmSleep(1400);
+    // --- Build the action list, tag-aware ----------------------------
+    // Universal SCENE size-up (all calls).
+    const seq = [];
+    seq.push({ cat: 'scene', label: 'BSI / PPE' });
+    seq.push({ cat: 'scene', label: 'Scene safety check' });
+    seq.push({ cat: 'scene', label: 'MOI / NOI' });
+    seq.push({ cat: 'scene', label: 'Patient count / call for resources' });
+    // Special: continue onto scene to flip out of scene phase.
+    seq.push({ continue: true });
+    // ASSESS: general impression + AVPU always first.
+    seq.push({ cat: 'assess', label: 'General impression' });
+    seq.push({ cat: 'assess', label: 'AVPU / mental status' });
+    seq.push({ cat: 'assess', label: 'Full vitals' });
+    // Call-type-specific assessment additions.
+    if (has('resp') || has('shock') || has('cardiac')) {
+      seq.push({ cat: 'assess', label: 'Lung sounds' });
+    }
+    if (has('shock') || has('cardiac') || has('neuro') || has('tox')) {
+      seq.push({ cat: 'assess', label: 'Skin signs' });
+    }
+    if (has('neuro') || has('tox') || has('cardiac')) {
+      seq.push({ cat: 'assess', label: 'Blood glucose' });
+    }
+    if (has('neuro')) {
+      seq.push({ cat: 'assess', label: 'Stroke screen (BE-FAST)' });
+    }
+    if (has('trauma') || has('burns')) {
+      seq.push({ cat: 'assess', label: 'Rapid trauma exam (DCAP-BTLS)' });
+    }
+    // TALK: history gathering for everyone.
+    seq.push({ cat: 'talk', label: 'Ask SAMPLE' });
+    seq.push({ cat: 'talk', label: 'Ask OPQRST' });
+    // TREAT: pick the most-protocol-appropriate intervention for the tag.
+    if (has('cardiac')) {
+      seq.push({ cat: 'treat', label: 'Position of comfort' });
+      seq.push({ cat: 'treat', label: 'O\u2082 \u2014 NC 2-6 LPM' });
+      seq.push({ cat: 'treat', label: 'Aspirin 324 mg PO (chewed)' });
+    } else if (has('shock')) {
+      seq.push({ cat: 'treat', label: 'O\u2082 \u2014 NRB 10-15 LPM' });
+      seq.push({ cat: 'treat', label: 'Assist epinephrine auto-injector (pt\u2019s own)' });
+    } else if (has('resp')) {
+      seq.push({ cat: 'treat', label: 'Position of comfort' });
+      seq.push({ cat: 'treat', label: 'O\u2082 \u2014 NRB 10-15 LPM' });
+      seq.push({ cat: 'treat', label: 'Assist patient\u2019s prescribed inhaler' });
+    } else if (has('tox')) {
+      seq.push({ cat: 'treat', label: 'O\u2082 \u2014 NRB 10-15 LPM' });
+      seq.push({ cat: 'treat', label: 'Naloxone 2 mg IN (1 mg/nostril)' });
+    } else if (has('trauma') || has('burns')) {
+      seq.push({ cat: 'treat', label: 'O\u2082 \u2014 NRB 10-15 LPM' });
+      seq.push({ cat: 'treat', label: 'Direct pressure' });
+      seq.push({ cat: 'treat', label: 'Splint extremity' });
+    } else if (has('neuro')) {
+      seq.push({ cat: 'treat', label: 'Position of comfort' });
+      seq.push({ cat: 'treat', label: 'O\u2082 \u2014 NC 2-6 LPM' });
+      if (has('tox') || /seizure|hypoglycem|low glucose/i.test((dispatch && dispatch.title) || '')) {
+        seq.push({ cat: 'treat', label: 'Oral glucose 15 g' });
+      }
+    } else if (has('ob')) {
+      seq.push({ cat: 'treat', label: 'Position of comfort' });
+      seq.push({ cat: 'treat', label: 'O\u2082 \u2014 NC 2-6 LPM' });
+    } else {
+      // Generic medical: comfort + O2 + reassess.
+      seq.push({ cat: 'treat', label: 'Position of comfort' });
+      seq.push({ cat: 'treat', label: 'O\u2082 \u2014 NC 2-6 LPM' });
+    }
+    // Reassess (Full vitals again) so the player sees the trend display.
+    seq.push({ cat: 'assess', label: 'Full vitals' });
+    // --- Run the sequence -----------------------------------------------
+    for (let i = 0; i < seq.length; i++) {
+      if (!game.pkm || game.pkm.patientDead || game.pkm.dispoChosen) break;
+      const step = seq[i];
+      // CONTINUE ONTO SCENE flip.
+      if (step.continue) {
+        await pkmSleep(900);
+        try { if (typeof pkmContinueOntoScene === 'function') pkmContinueOntoScene(); } catch (_e) {}
+        await pkmSleep(900);
+        continue;
+      }
+      // Skip if not in the role's menu for this category.
+      const menu = (typeof PKM_ACTIONS !== 'undefined' && PKM_ACTIONS[step.cat])
+        ? (PKM_ACTIONS[step.cat][role] || []) : [];
+      if (menu.indexOf(step.label) === -1) {
+        continue;
+      }
+      // Wait for the previous action to release the lock.
+      let waits = 0;
+      while (game.pkm && game.pkm._actionLocked && waits < 40) {
+        await pkmSleep(150);
+        waits++;
+      }
+      if (!game.pkm || game.pkm.patientDead || game.pkm.dispoChosen) break;
+      try {
+        if (typeof pkmDoAction === 'function') {
+          await pkmDoAction(step.cat, step.label);
+        }
+      } catch (_eDo) {}
+      await pkmSleep(1100);
+    }
+    banner('Demo complete \u2014 you\u2019re back in control. Pick a transport disposition when ready.');
+  } catch (_e) {
+    // Demo errors should never crash the encounter.
+  } finally {
+    _autoTreatRunning = false;
+  }
+}
+
+// Tiny rAF-based sleep used by the auto-treatment runner. The original
+// (no-arg) _pkmRafSleep waits one rAF tick; we want a longer beat between
+// auto-fired actions so the player can read each step\u2019s output. Use
+// the existing pkmSleep(ms) helper instead.
 async function pkmDoAction(category, label) {
   if (!game.pkm || !game.pkm.active) return;
   if (game.pkm.patientDead || game.pkm.needsReset) return;
@@ -49129,6 +49342,9 @@ function returnToSelect() {
   try {
     const wtCb = document.getElementById('title-walkthrough-cb');
     if (wtCb) wtCb.checked = _walkthroughFirstCallEnabled();
+    // Stage 3: same re-sync for the auto-treatment toggle.
+    const atCb = document.getElementById('title-autotreat-cb');
+    if (atCb) atCb.checked = _autotreatFirstCallEnabled();
   } catch (_eWtRefresh) {}
   document.getElementById('select-screen').style.display = 'none';
   document.getElementById('howto-screen').style.display = 'none';
