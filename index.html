@@ -19139,19 +19139,28 @@ const GAMEWALK_STEPS = [
 
 // State lives on the game object (not pkm — pkm is per-encounter).
 function initGameWalkthroughForShift(opts) {
+  // Stage 3 fix: per user request, the legacy game-walkthrough is fully
+  // disabled. Only the newer enc-walkthrough (game.walkthrough, driven
+  // by initFirstCallWalkthroughIfNeeded) is active now. The original
+  // game-walkthrough fired in parallel from startShift and stacked a
+  // second tutorial bubble on top of the new one. We early-return here
+  // so nothing renders. The DOM element + helper functions are left in
+  // place for save-shape stability \u2014 they just no longer do anything.
   opts = opts || {};
   game.gameWalkthrough = {
     active: false,
-    completed: false,
+    completed: true,         // mark completed so any future check short-circuits
     skipped: false,
     currentStep: 0,
-    forced: !!opts.forced,   // bypass localStorage when replaying
+    forced: false,
     _autoTimer: null,
   };
-  if (!opts.forced && _gameWalkthroughDisabled()) return;
-  game.gameWalkthrough.active = true;
-  // Show step 1 right away.
-  _renderGameWalkthroughStep();
+  // Defensive: also hide the legacy DOM element if it's somehow visible.
+  try {
+    const el = document.getElementById('game-walkthrough');
+    if (el) el.style.display = 'none';
+  } catch (_e) {}
+  return;
 }
 
 function _renderGameWalkthroughStep() {
