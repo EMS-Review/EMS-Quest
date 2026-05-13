@@ -1096,6 +1096,7 @@
   /* Stage 2.0v: RESCUE TRUCK vehicle card hidden until the RESCUE code is
      entered. Same selector specificity pattern as the AEMT role card. */
   #vehicle-card-rescue.locked-rescue { display: none !important; }
+  #vehicle-card-moto.locked-moto     { display: none !important; }
   .role-card .opt-title, .vehicle-card .opt-title, .shift-card .opt-title {
     font-weight: bold;
     font-size: 13px;
@@ -1173,26 +1174,35 @@
     transition: width 0.5s linear;
   }
   /* === End of shift screen === */
-  #shift-end h1 { color: #06d6a0; }
+  #shift-end h1 { color: #06d6a0; margin-bottom: 4px; }
+  #shift-end .sub { margin-bottom: 12px; }
+  /* Stage 4 QOL: 2-column stats grid so the panel reads horizontally
+     rather than a long vertical column. Each cell is a label + value
+     pair stacked vertically; rows of cells flow across the panel. */
   #shift-end .stats {
-    display: flex; flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    column-gap: 28px; row-gap: 14px;
     background: #1a1a2e;
     border: 2px solid #06d6a0;
     border-radius: 6px;
-    padding: 24px 32px;
-    margin: 12px 0 20px;
-    min-width: 320px;
+    padding: 22px 30px;
+    margin: 8px auto 16px;
+    max-width: 560px; min-width: 480px;
   }
   #shift-end .stat-row {
-    display: flex; justify-content: space-between;
-    align-items: baseline; gap: 24px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    padding-bottom: 8px;
+    display: flex; flex-direction: column;
+    align-items: flex-start; gap: 2px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 6px;
   }
-  #shift-end .stat-row:last-child { border-bottom: none; padding-bottom: 0; }
+  /* The last row in each column shouldn't have a divider. We rely on
+     the implicit row index — for 6-7 stat rows in 2 columns, the
+     bottom row is rows 3 (col 1) and 6/7 (col 2). Simpler: just
+     remove the bottom border from the last two .stat-row children. */
+  #shift-end .stat-row:nth-last-child(-n+2) { border-bottom: none; padding-bottom: 0; }
   #shift-end .stat-label {
-    font-size: 11px; color: #a0a0b0;
+    font-size: 10px; color: #a0a0b0;
     letter-spacing: 1.5px;
   }
   #shift-end .stat-value {
@@ -1201,8 +1211,14 @@
   }
   #shift-end .stat-value.score {
     color: #06d6a0;
-    font-size: 32px;
+    font-size: 28px;
   }
+  /* Button row — primary + secondaries side-by-side. */
+  #shift-end .se-button-row {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 10px; margin-top: 6px; max-width: 580px;
+  }
+  #shift-end .se-button-row button { margin: 0; }
   /* ============================================================
      Stage 2.0a — POKéMON-STYLE PATIENT ENCOUNTER
      Top half = battle scene (sky/grass gradient, sprites, nameplates).
@@ -1787,25 +1803,6 @@
     <div id="crew-cards" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; max-width:170px;"></div>
   </div>
   <div id="right-panel" style="display:none;">
-    <!-- Stage 4 QOL: persistent PARTNER pill. Shows the equipped frame
-         border so the cosmetic upgrade reads at-a-glance during play,
-         not only when the partner speech bubble briefly pops up. Hidden
-         until startShift sets game.partner. -->
-    <div id="partner-pill" style="
-      display:none; align-items:center; gap:8px;
-      padding:6px 12px;
-      background:rgba(10,10,20,0.92);
-      border:2px solid #ffd166; border-radius:6px;
-      color:#f4f1de; font-family:'Courier New',monospace; font-size:11px;
-      letter-spacing:1px; margin-bottom:8px;
-      box-shadow:0 0 12px rgba(255,209,102,0.18);
-    ">
-      <span style="font-size:14px;">👤</span>
-      <div style="display:flex; flex-direction:column; gap:1px;">
-        <span style="font-size:9px; color:#a8b0c4; letter-spacing:1.5px;">PARTNER</span>
-        <span id="partner-pill-name" style="color:#ffd166; font-weight:bold;">—</span>
-      </div>
-    </div>
     <div id="clock-panel">
       <div class="head">⏰ SHIFT CLOCK</div>
       <div class="game-time" id="game-time">8:00 AM</div>
@@ -2087,22 +2084,30 @@
       flex:1; overflow-y:auto; padding:8px 10px; min-height:140px; max-height:260px;
       display:flex; flex-direction:column; gap:6px;
     "></div>
-    <!-- Stage 3: Visible refusal checklist. Shown only when the patient
-         refusal speech is active (chatState.patientActive). Live-updates
-         as the player covers each concept in chat. Updated by
-         _renderRefusalChecklist(). Hidden by default. -->
-    <div id="refusal-checklist" style="
-      display:none; padding:6px 10px; border-top:1px solid #2a3a44;
-      background:rgba(102, 56, 169, 0.10); font-size:10.5px; line-height:1.5;
-      color:#e0d8f0;
-    ">
-      <div style="font-weight:bold; letter-spacing:1.2px; color:#c77dff;
-                  margin-bottom:3px;">REFUSAL CHECKLIST</div>
+    <!-- Stage 4 QOL: refusal checklist removed per user request. The DOM
+         nodes stay (display:none, hard-pinned) so existing JS that reads
+         #refusal-checklist-rows etc. doesn't NPE — but nothing is shown
+         to the player. The new AUTO-REFUSAL button on the patient tab
+         supersedes the visible checklist for one-click refusals. -->
+    <div id="refusal-checklist" style="display:none !important;">
       <div id="refusal-checklist-rows"></div>
-      <div id="refusal-checklist-block" style="
-        margin-top:4px; font-size:10px; color:#ffd166; display:none;
-      "></div>
+      <div id="refusal-checklist-block"></div>
     </div>
+    <!-- Stage 4 QOL: AUTO-REFUSAL — one-click refusal flow. Visible only
+         when the PATIENT tab is selected AND chatState.patientActive is
+         true (i.e. a refusal speech is in progress). Clicking runs the
+         full safe-refusal script: recommend, explain risks, teach-back,
+         return precautions, command if high-risk, document. Mirrors the
+         auto-radio pattern — players who don't want to type the whole
+         refusal still get the lesson by watching it play out. -->
+    <button id="auto-refusal-btn" style="
+      display:none; margin:4px 8px; padding:8px 12px;
+      background:rgba(167, 139, 250, 0.16);
+      color:#c4b5fd; border:1px solid #a78bfa; border-radius:4px;
+      font-family:inherit; font-size:11px; font-weight:bold;
+      letter-spacing:1.5px; cursor:pointer; text-align:center;
+      box-shadow:0 0 10px rgba(167, 139, 250, 0.25);
+    ">🤝 AUTO-REFUSAL — run the safe-refusal script</button>
     <div style="border-top:1px solid #2a3a44; padding:6px 8px; display:flex; gap:6px;">
       <input id="chat-input" type="text" placeholder='Press "/" to type in chat'
         style="flex:1; background:#1a1a2e; border:1px solid #3a3a44; color:#f4f1de;
@@ -2477,6 +2482,14 @@
           background:#3d3d5c; color:#ffd166; border:none; border-radius:4px;
           font-family:inherit; font-size:10px; letter-spacing:1.2px; font-weight:700;
           cursor:pointer; text-transform:uppercase;">Garage</button>
+        <button class="respect-tab" data-rtab="trainingRooms" style="flex:1; min-width:80px; padding:7px 4px;
+          background:#3d3d5c; color:#ffd166; border:none; border-radius:4px;
+          font-family:inherit; font-size:10px; letter-spacing:1.2px; font-weight:700;
+          cursor:pointer; text-transform:uppercase;">Training</button>
+        <button class="respect-tab" data-rtab="vehicles" style="flex:1; min-width:80px; padding:7px 4px;
+          background:#3d3d5c; color:#ffd166; border:none; border-radius:4px;
+          font-family:inherit; font-size:10px; letter-spacing:1.2px; font-weight:700;
+          cursor:pointer; text-transform:uppercase;">Rigs</button>
       </div>
       <div id="respect-shop-list" style="font-size:12px; line-height:1.5; color:#f4f1de;
               max-height:54vh; overflow-y:auto; padding-right:6px;"></div>
@@ -2484,6 +2497,91 @@
               letter-spacing:1px; min-height:14px; margin-top:10px; text-align:center; color:#06d6a0;"></div>
       <div style="text-align:center; margin-top:10px;">
         <button class="primary" id="respect-shop-back-btn">BACK</button>
+      </div>
+    </div>
+  </div>
+  <!-- Stage 4 QOL: TRAINING ROOMS — garage menu of EMT practice modules.
+       Unlocked by spending Respect (each room has a shop entry too).
+       Mini-games are pure practice; they don't touch live shift state. -->
+  <div class="screen" id="training-screen" style="display:none;
+        background: rgba(10, 10, 20, 0.97); z-index: 50;
+        overflow-y:auto; align-items:flex-start; padding-top:24px; padding-bottom:24px;">
+    <div style="max-width:760px; width:92%; background:#1a1a2e;
+                border:2px solid #06d6a0; border-radius:8px;
+                padding:24px 28px; box-shadow:0 0 24px rgba(6,214,160,0.18);">
+      <h1 style="color:#06d6a0; margin:0 0 4px; letter-spacing:2px; text-align:center;">
+        ⚑ EMS QUEST GARAGE
+      </h1>
+      <div style="text-align:center; font-family:'Courier New',monospace;
+                  font-size:12px; color:#a8b0c4; letter-spacing:1.5px;
+                  margin-bottom:12px;">
+        EMT TRAINING ROOMS — practice without a live shift
+      </div>
+      <div id="training-balance" style="text-align:center;
+                  font-family:'Courier New',monospace; font-size:11px;
+                  color:#a8b0c4; letter-spacing:1.5px; margin-bottom:14px;">
+        RESPECT: <span id="training-respect-amount" style="color:#ffd166; font-weight:bold;">0</span>
+      </div>
+      <div id="training-room-list" style="display:grid;
+                  grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+                  grid-auto-rows:1fr; align-items:stretch;
+                  gap:10px;"></div>
+      <div id="training-feedback" style="font-family:'Courier New',monospace;
+                  font-size:11px; letter-spacing:1px; min-height:14px;
+                  margin-top:12px; text-align:center; color:#06d6a0;"></div>
+      <div style="text-align:center; margin-top:14px;">
+        <button class="primary" id="training-back-btn">BACK</button>
+      </div>
+    </div>
+  </div>
+  <!-- Stage 4 QOL: TRAINING MINI-GAME runner — one shared modal that
+       hosts a multiple-choice scenario card for any of the five rooms.
+       Question pool + room title + scoring are driven by trainingState. -->
+  <div class="screen" id="training-game-screen" style="display:none;
+        background: rgba(10, 10, 20, 0.97); z-index: 51;
+        overflow-y:auto; align-items:center; justify-content:center;
+        padding-top:24px; padding-bottom:24px;">
+    <div style="max-width:680px; width:92%; background:#2a2c3e;
+                border:2px solid #06d6a0; border-radius:10px;
+                padding:24px 28px;
+                box-shadow:0 0 32px rgba(6,214,160,0.35),
+                            inset 0 0 0 1px rgba(255,255,255,0.04);
+                color:#f4f1de;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; gap:14px; margin-bottom:8px;">
+        <h2 id="training-game-title" style="color:#06d6a0; margin:0; letter-spacing:2px; font-size:18px; text-shadow:0 0 12px rgba(6,214,160,0.5);">
+          AIRWAY LAB
+        </h2>
+        <span id="training-game-progress" style="font-family:'Courier New',monospace;
+                font-size:11px; color:#a8b0c4; letter-spacing:1.5px;">
+          Q 1 / 5
+        </span>
+      </div>
+      <div id="training-game-prompt" style="font-size:14px; line-height:1.55;
+              color:#f7f5e8; padding:14px 18px; background:rgba(255,255,255,0.08);
+              border-left:3px solid #06d6a0; border-radius:4px; margin-bottom:10px;
+              text-align:left;"></div>
+      <div id="training-game-vitals" style="font-family:'Courier New',monospace;
+              font-size:12px; color:#fde047; letter-spacing:1.2px;
+              padding:8px 14px; margin-bottom:14px; display:none;
+              background:rgba(253,224,71,0.08); border-radius:4px;
+              border-left:2px solid #fde047; text-align:left;"></div>
+      <div id="training-game-options" style="display:flex; flex-direction:column;
+              gap:8px; margin-bottom:14px;"></div>
+      <div id="training-game-explanation" style="font-size:12px; line-height:1.6;
+              color:#e0e4ec; padding:14px 16px; background:rgba(6,214,160,0.09);
+              border:1px solid rgba(6,214,160,0.4); border-radius:4px;
+              margin-bottom:14px; display:none; text-align:left;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <span id="training-game-score" style="font-family:'Courier New',monospace;
+                font-size:11px; color:#a8b0c4; letter-spacing:1.5px;">
+          SCORE: <span id="training-game-score-val" style="color:#06d6a0; font-weight:bold;">0</span>
+        </span>
+        <div>
+          <button class="secondary" id="training-game-quit-btn"
+                  style="padding:8px 16px;">Quit</button>
+          <button class="primary" id="training-game-next-btn"
+                  style="padding:8px 20px; display:none; margin-left:6px;">Next</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2587,6 +2685,13 @@
                 <button class="opt vehicle-card locked-rescue" data-vehicle="rescue" id="vehicle-card-rescue">
                   <div class="opt-title">RESCUE TRUCK</div>
                   <div class="opt-sub">Fire-rescue heavy · 4-crew</div>
+                </button>
+                <!-- Stage 4 QOL: motorcycle unlock-only. Hidden by CSS
+                     (.locked-moto) until applyCodeUnlocks confirms the
+                     player owns the moto unlock in the Respect Shop. -->
+                <button class="opt vehicle-card locked-moto" data-vehicle="moto" id="vehicle-card-moto">
+                  <div class="opt-title">MOTORCYCLE</div>
+                  <div class="opt-sub">Black bike · fly-car · solo</div>
                 </button>
               </div>
             </div>
@@ -3251,16 +3356,21 @@
         <span class="stat-value" id="se-respect-banked" style="color:#06d6a0;">+0</span>
       </div>
     </div>
-    <button class="primary" id="se-newshift">NEW SHIFT</button>
-    <!-- Stage 4 QOL: jump directly to the RESPECT SHOP from the shift-end
-         screen so players can spend what they just earned. -->
-    <button class="secondary" id="se-respect-shop-btn"
-            style="background:#2a3d2e; color:#06d6a0; border-color:#06d6a0;">
-      ★ SPEND RESPECT
-    </button>
-    <button class="secondary" id="se-back">BACK TO CHARACTER SELECT</button>
-    <!-- Stage 1.6 fix: credits button — opens overlay, leaves shift-end intact. -->
-    <button class="secondary" id="se-credits-btn">CREDITS</button>
+    <div class="se-button-row">
+      <button class="primary" id="se-newshift">NEW SHIFT</button>
+      <!-- Stage 4 QOL: jump directly to the RESPECT SHOP from the shift-end
+           screen so players can spend what they just earned. -->
+      <button class="secondary" id="se-respect-shop-btn"
+              style="background:#2a3d2e; color:#06d6a0; border-color:#06d6a0;">
+        ★ SPEND RESPECT
+      </button>
+      <!-- Stage 4 QOL: back to title — players asked for a way out of
+           shift-end besides starting another shift. Routes through
+           returnToSelect which clears the resume snapshot. -->
+      <button class="secondary" id="se-title-btn">BACK TO TITLE</button>
+      <!-- Stage 1.6 fix: credits button — opens overlay, leaves shift-end intact. -->
+      <button class="secondary" id="se-credits-btn">CREDITS</button>
+    </div>
   </div>
   <div class="screen" id="game-over" style="display:none;">
     <h1>UNIT OUT OF SERVICE</h1>
@@ -3273,7 +3383,8 @@
       <div style="font-size: 32px; color: #ffd166; margin: 4px 0 4px;" id="go-score">0</div>
     </div>
     <button class="primary" id="retry-btn">START NEW SHIFT</button>
-    <button class="secondary" id="go-back-select">BACK TO CHARACTER SELECT</button>
+    <!-- Stage 4 QOL: matches the shift-end exit. -->
+    <button class="secondary" id="go-title-btn">BACK TO TITLE</button>
     <!-- Stage 1.6 fix: credits button — opens overlay, leaves game-over intact. -->
     <button class="secondary" id="go-credits-btn">CREDITS</button>
   </div>
@@ -4890,7 +5001,12 @@ function ensureChunks() {
   // up. If we exceed MAX_CACHED_CHUNKS, drop the chunks farthest from the
   // camera until we're back under the cap. Chunks inside the active
   // visible radius (still on screen) are protected from eviction.
-  const MAX_CACHED_CHUNKS = 100;
+  // Stage 4 polish: lowered the cap from 100 to 36. Each chunk is a
+  // 1280x1280 canvas (~6.5 MB GPU/RAM), so 100 worst-case was ~625 MB.
+  // At typical zoom we see 12-16 chunks; 36 leaves a comfortable buffer
+  // for re-entry without thrashing while keeping the memory ceiling
+  // around 230 MB — much friendlier to mobile devices.
+  const MAX_CACHED_CHUNKS = 36;
   if (chunks.size > MAX_CACHED_CHUNKS) {
     const camChunkCx = Math.floor(cam.x / CHUNK_SIZE);
     const camChunkCz = Math.floor(cam.y / CHUNK_SIZE);
@@ -10355,7 +10471,14 @@ function _patientConceptHint(concept) {
 // message, from startPatientRefusalSpeech on open, and from
 // finishPatientSpeech to clear.
 function _renderRefusalChecklist() {
+  // Stage 4 QOL: visible refusal checklist removed per user request.
+  // Existing patientProgress tracking still drives the AUTO-REFUSAL
+  // button gate, but no checklist DOM is shown.
   const panel = document.getElementById('refusal-checklist');
+  if (panel) panel.style.display = 'none';
+  return;
+  // ----- legacy unreachable code below kept for reference -----
+  // eslint-disable-next-line no-unreachable
   if (!panel) return;
   if (!chatState.patientActive) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
@@ -10504,6 +10627,8 @@ function startPatientRefusalSpeech(dispatch, onComplete) {
   // Stage 3: paint the refusal checklist immediately so the player sees
   // the required concepts before sending their first message.
   try { _renderRefusalChecklist(); } catch (_eRc) {}
+  // Stage 4 QOL: refresh AUTO-REFUSAL visibility when the refusal speech opens.
+  try { _refreshAutoRadioButton(); } catch (_eAR) {}
 }
 // Tear down the patient channel and run the queued completion.
 function finishPatientSpeech() {
@@ -10534,6 +10659,8 @@ function finishPatientSpeech() {
     renderChatLog();
   }
   if (typeof cb === 'function') cb();
+  // Stage 4 QOL: hide AUTO-REFUSAL button now that the refusal speech is done.
+  try { _refreshAutoRadioButton(); } catch (_eAR) {}
 }
 function partnerReply(msg) {
   msg = (msg || '').toLowerCase().trim();
@@ -11322,6 +11449,8 @@ function setupChat() {
       chatState.activeTab = b.dataset.target;
       renderChatTabs();
       renderChatLog();
+      // Stage 4 QOL: AUTO-REFUSAL button visibility tracks the patient tab.
+      try { _refreshAutoRadioButton(); } catch (_e) {}
     });
   });
   // Pause-while-typing: focus = typing (game pauses), blur = resume.
@@ -11374,6 +11503,70 @@ function setupChat() {
   // Stage 1.6: hide deferred tabs until they activate via story flow.
   reorderChatTabs();
   syncChatTabsOverflow();
+  // Stage 4 QOL: AUTO-REFUSAL button — in-chat-panel equivalent of the
+  // central AUTO-RADIO REFUSAL flow. Replays the same lines through
+  // sendChatMessage so the patient parser updates progress + the
+  // refusal completes naturally. Self-disables while playing so a
+  // double-tap doesn't queue the script twice.
+  const autoRefusalBtn = document.getElementById('auto-refusal-btn');
+  if (autoRefusalBtn) {
+    autoRefusalBtn.addEventListener('click', () => {
+      if (autoRefusalBtn.dataset.running === '1') return;
+      autoRefusalBtn.dataset.running = '1';
+      autoRefusalBtn.style.opacity = '0.5';
+      autoRefusalBtn.style.pointerEvents = 'none';
+      // Make sure we're on the patient tab.
+      try {
+        chatState.activeTab = 'patient';
+        if (typeof reorderChatTabs === 'function') reorderChatTabs();
+        if (typeof renderChatTabs === 'function') renderChatTabs();
+        renderChatLog();
+        clearChatUnread();
+      } catch (_e) {}
+      const highRisk = (typeof patientRefusalIsHighRisk === 'function') &&
+                       patientRefusalIsHighRisk();
+      const lines = [
+        // Combined: recommendation + risks (one send credits both).
+        'I recommend you go to the ER to be evaluated. If you refuse, ' +
+        'there\u2019s a real risk this gets worse \u2014 serious illness, ' +
+        'disability, even death are on the table.',
+        // Understanding / teach-back.
+        'Do you understand those risks, and do you still want to refuse?',
+        // Return precautions + documentation.
+        'Okay \u2014 if symptoms return or worsen, call 911 immediately or ' +
+        'go to the ER. We\u2019ll have you sign the refusal form to document this.',
+      ];
+      if (highRisk) {
+        lines.push('Dispatch, patch us to medical command for a high-risk refusal.');
+      }
+      try {
+        chatAppend('patient', 'system', '\u2014 Auto-refusal: safe-refusal script \u2014');
+      } catch (_e) {}
+      let delay = 500;
+      lines.forEach((line) => {
+        setTimeout(() => {
+          // Route through sendChatMessage so the patient parser sees
+          // the message exactly as if the player typed it (drives
+          // patientReply + concept progression).
+          try { sendChatMessage(line); } catch (_e) {}
+        }, delay);
+        // Stage 4 QOL: 5 seconds between messages so the player has
+        // time to read each line + the patient's reply before the
+        // next one drops. The patient reply lands ~700-1100ms after
+        // the player message, so 5s leaves ~3.5s of reading time.
+        delay += 5000;
+      });
+      // Re-enable + hide after the last line lands (button hides
+      // naturally once chatState.patientActive flips false; this is a
+      // belt-and-suspenders cleanup if the speech somehow stays open).
+      setTimeout(() => {
+        autoRefusalBtn.dataset.running = '0';
+        autoRefusalBtn.style.opacity = '1';
+        autoRefusalBtn.style.pointerEvents = 'auto';
+        try { _refreshAutoRadioButton(); } catch (_e) {}
+      }, delay + 200);
+    });
+  }
   // Stage 3: Auto-radio button. Programmatically opens the chat panel,
   // switches to the DISPATCH tab, and types out the appropriate radio
   // script for the player's pending disposition (transport / ALS handoff
@@ -11386,9 +11579,22 @@ function setupChat() {
   if (autoRadioBtn) {
     autoRadioBtn.addEventListener('click', () => {
       const mode = autoRadioBtn.dataset.mode || 'dispatch';
-      const stationName = (game.role === 'CEMS') ? 'CEMS 1'
-                         : (game.role === 'AEMT') ? 'Medic 1'
-                         : 'BLS 1';
+      // Stage 4 QOL: prefer the player's EQUIPPED unit number (set in
+      // the Respect Shop) for the callsign on auto-radio. Falls back to
+      // the role-based defaults if no Respect-shop unit is set yet (or
+      // the accessor isn't loaded).
+      let stationName = null;
+      try {
+        const _eqUnit = getActiveUnitNumber();
+        if (_eqUnit && typeof _eqUnit === 'string' && _eqUnit.length > 0) {
+          stationName = _eqUnit;
+        }
+      } catch (_eU) {}
+      if (!stationName) {
+        stationName = (game.role === 'CEMS') ? 'CEMS 1'
+                    : (game.role === 'AEMT') ? 'Medic 1'
+                    : 'BLS 1';
+      }
       // ------- MODE 1: ALS handoff (medic channel) ----------------------
       // Builds a complete handoff message covering chief complaint,
       // vitals, history (SAMPLE/OPQRST), and interventions so the
@@ -12337,6 +12543,14 @@ function updateDriving(dt) {
     limitMph = game.lightsSirens
       ? 60
       : game.speedLimit;
+  } else if (game.vehicle === 'moto') {
+    // Stage 4 QOL: motorcycle is a fly-car. Flat 60 mph top speed
+    // regardless of posted limit (per user spec) — the bike's whole
+    // point is fast urban response. Posted limit still applies when
+    // L/S is off so the player can't speed without due cause.
+    limitMph = game.lightsSirens
+      ? 60
+      : Math.min(60, game.speedLimit + 5);
   } else {
     limitMph = game.speedLimit + (game.lightsSirens ? 20 : 0);
   }
@@ -12345,7 +12559,11 @@ function updateDriving(dt) {
   const speedFrac = Math.min(1, Math.abs(player.speed) / 25);
   const turn = (left ? 1 : 0) - (right ? 1 : 0);
   const dir = player.speed >= 0 ? 1 : -1;
-  player.heading -= turn * TURN_RATE * speedFrac * dir * dt;
+  // Stage 4 QOL: motorcycle has a tighter turn radius than four-wheel
+  // rigs — sharper handling matches its size and is part of the
+  // fly-car appeal. 1.4× the base turn rate.
+  const turnRateMult = (game.vehicle === 'moto') ? 1.4 : 1.0;
+  player.heading -= turn * TURN_RATE * turnRateMult * speedFrac * dir * dt;
   const fx = Math.cos(player.heading);
   const fy = Math.sin(player.heading);
   let nx = player.x + fx * player.speed * dt;
@@ -13320,6 +13538,20 @@ function hideActionPrompt() {
 //     "AUTO-FILL HANDOFF" (vitals/history/interventions to the medic)
 //   - otherwise: hidden
 function _refreshAutoRadioButton() {
+  // Stage 4 QOL: also drive the in-chat AUTO-REFUSAL button. It mirrors
+  // the refusal branch below but lives INSIDE the chat panel so it's
+  // visible while the player is actively on the PATIENT tab. The
+  // central auto-radio button is hidden when the chat panel covers it.
+  try {
+    const arf = document.getElementById('auto-refusal-btn');
+    if (arf) {
+      const refusalPhase = (game && game.onScenePhase === 'refusalSpeech');
+      const patientLive  = chatState && chatState.patientActive &&
+                           !chatState.patientSpeechComplete;
+      const patientTab   = chatState && chatState.activeTab === 'patient';
+      arf.style.display = (refusalPhase && patientLive && patientTab) ? 'block' : 'none';
+    }
+  } catch (_eARF) {}
   const ar = document.getElementById('auto-radio-btn');
   if (!ar) return;
   const phase = game && game.onScenePhase;
@@ -13393,6 +13625,12 @@ function renderCrewIndicator() {
   for (let i = 0; i < crewCount; i++) {
     const alive = i < game.crewRemaining;
     const card = document.createElement('div');
+    // Stage 4 QOL: tag the partner card (index 1 for ambo/squad; for
+    // rescue, indices 1-3 are silent crew that share the partner's
+    // appearance — we still tag index 1 as the "partner" card for frame
+    // styling so the cosmetic affects exactly one slot regardless).
+    const isPartnerSlot = (i === 1);
+    if (isPartnerSlot) card.setAttribute('data-crew-role', 'partner');
     card.style.cssText =
       'display:flex; flex-direction:column; align-items:center; gap:2px;' +
       'background:' + (alive ? 'rgba(6,214,160,0.08)' : 'rgba(60,60,70,0.15)') + ';' +
@@ -13436,9 +13674,11 @@ function renderCrewIndicator() {
     const ekg = document.createElement('div');
     if (alive) {
       // Repeating QRS-ish waveform. We animate via stroke-dashoffset.
+      // Stage 4 QOL: mark the path so _applyPartnerFrameStyle can swap
+      // the stroke color to the active frame for the partner card.
       ekg.innerHTML =
         '<svg width="64" height="14" viewBox="0 0 128 14" style="display:block;">' +
-          '<path d="M 0 7 L 16 7 L 22 7 L 26 3 L 30 11 L 34 7 L 50 7 L 64 7 L 80 7 L 86 7 L 90 3 L 94 11 L 98 7 L 114 7 L 128 7" ' +
+          '<path class="crew-ekg-path" d="M 0 7 L 16 7 L 22 7 L 26 3 L 30 11 L 34 7 L 50 7 L 64 7 L 80 7 L 86 7 L 90 3 L 94 11 L 98 7 L 114 7 L 128 7" ' +
           'fill="none" stroke="#06d6a0" stroke-width="1.4" ' +
           'style="filter:drop-shadow(0 0 2px rgba(6,214,160,0.7));">' +
             '<animate attributeName="stroke-dashoffset" from="128" to="0" dur="1.6s" repeatCount="indefinite"/>' +
@@ -13471,7 +13711,7 @@ function renderCrewIndicator() {
     hpWrap.innerHTML =
       '<div style="width:100%; height:6px; background:#0a0a14;' +
       ' border:1px solid #2a2c34; border-radius:2px; overflow:hidden;">' +
-        '<div style="width:' + (hpPct * 100).toFixed(0) + '%; height:100%;' +
+        '<div class="crew-hp-fill" style="width:' + (hpPct * 100).toFixed(0) + '%; height:100%;' +
         ' background:' + hpColor + ';' +
         ' box-shadow:0 0 4px ' + (alive ? hpColor : 'transparent') + ';' +
         ' transition:width 0.4s ease-out, background 0.4s ease-out;"></div>' +
@@ -13481,6 +13721,9 @@ function renderCrewIndicator() {
     card.appendChild(hpWrap);
     row.appendChild(card);
   }
+  // Stage 4 QOL: re-apply the partner frame so border + EKG + HP fill
+  // pick up the equipped color now that the cards are freshly built.
+  try { _applyPartnerFrameStyle(); } catch (_eRC) {}
 }
 // ============================================================
 // STAGE 2.0a — SCORE + PROVIDER HP UTILITIES
@@ -13968,6 +14211,13 @@ function _emsqInferProviderNameGender(name) {
 // startShift's initPlayerName call so the rename applies for exactly one
 // shift — subsequent shifts roll a fresh name from PLAYER_NAMES.
 let _oneTimePlayerNameOverride = null;
+// Stage 4 QOL: session-scoped AEMT-training-rooms unlock. Set by the
+// "AEMT" cheat code on the title screen. Reset to false on every page
+// reload (this is a plain JS `let`, not in localStorage) — matches the
+// user's spec: "you can ONLY see them once you use the AEMT code in
+// the session." Three rooms are gated behind this flag: AEMT Airway
+// Lab, AEMT Medications Lab, AEMT Interventions Lab.
+let _aemtSessionUnlocked = false;
 // The pool intentionally has no overlap with PARTNER_ARCHETYPES names so
 // the player and their partner can never share a name. Stored on
 // game.playerName; crewNames() reads from it.
@@ -19724,8 +19974,19 @@ function pkmContinueOntoScene() {
   // Stage chat: player tells dispatch they are on scene; dispatch acks.
   try {
     if (typeof chatAppend === 'function') {
-      const _unit = (typeof game.unitNum === 'string' && game.unitNum) ||
-                    (game.role === 'CEMS' ? 'CEMS 1' : 'Medic 12');
+      // Stage 4 QOL: prefer the player's equipped Respect-shop unit
+      // number (matches the rest of the auto-radio chats). Falls back
+      // through game.unitNum and finally the role default.
+      let _unit = null;
+      try {
+        const _eq = (typeof getActiveUnitNumber === 'function') ? getActiveUnitNumber() : null;
+        if (_eq && typeof _eq === 'string' && _eq.length > 0) _unit = _eq;
+      } catch (_eU) {}
+      if (!_unit) {
+        _unit = (typeof game.unitNum === 'string' && game.unitNum) ||
+                (game.role === 'CEMS' ? 'CEMS 1' :
+                 game.role === 'AEMT' ? 'Medic 1' : 'BLS 1');
+      }
       chatAppend('dispatch', 'me',
         'Dispatch, ' + _unit + ' show us on scene.');
       setTimeout(function () {
@@ -29922,12 +30183,25 @@ function drawVehicle(ctx, vx, vy, heading, type, lightsOn, headlightsOn, t, play
     }
     ctx.fillStyle = phase > 0 ? aCol : bCol;
     ctx.beginPath();
-    ctx.ellipse(0, 0, 38, 26, 0, 0, Math.PI * 2);
+    // Stage 4 QOL: motorcycle is a much smaller silhouette than the
+    // four-wheel rigs, so its strobe halo is scaled down to match.
+    // The 38/26 ellipse on a 9-px-wide bike looked like a flying
+    // saucer; 18/12 hugs the bike shape proportionally.
+    if (type === 'moto') {
+      ctx.ellipse(0, 0, 18, 12, 0, 0, Math.PI * 2);
+    } else {
+      ctx.ellipse(0, 0, 38, 26, 0, 0, Math.PI * 2);
+    }
     ctx.fill();
   }
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.beginPath();
-  ctx.ellipse(2, 2, 14, 8, 0, 0, Math.PI * 2);
+  // Smaller ground shadow for the bike too.
+  if (type === 'moto') {
+    ctx.ellipse(1, 1, 8, 4, 0, 0, Math.PI * 2);
+  } else {
+    ctx.ellipse(2, 2, 14, 8, 0, 0, Math.PI * 2);
+  }
   ctx.fill();
   // Stage 4 QOL: real color theming — when this is the player's rig we
   // forward the active theme's body/bodyShade AND lightbar style so
@@ -29951,6 +30225,7 @@ function drawVehicle(ctx, vx, vy, heading, type, lightsOn, headlightsOn, t, play
   if (type === 'ambo') drawAmbo(ctx, lightsOn, t, themeColors);
   else if (type === 'squad') drawSquad(ctx, lightsOn, t, themeColors);
   else if (type === 'rescue') drawRescue(ctx, lightsOn, t, themeColors);
+  else if (type === 'moto') drawMoto(ctx, lightsOn, t, themeColors);
   ctx.restore();
 }
 function drawAmbo(ctx, lightsOn, t, themeColors) {
@@ -30112,6 +30387,154 @@ function drawRescue(ctx, lightsOn, t, themeColors) {
   ctx.fillStyle = '#fff5cc';
   ctx.fillRect(18.5, -5, 0.7, 1.8);
   ctx.fillRect(18.5, 2.5, 0.7, 1.8);
+}
+// ============================================================
+// STAGE 4 QOL — EMS MOTORCYCLE (sportbike profile)
+// ============================================================
+// Top-down silhouette of a sport-bike fly-car (Ninja-style). Tapered
+// nose, full fairing, slim mid-frame, peaked tail. Rider visible at the
+// hump in the middle with a black helmet. Slightly smaller than before
+// per request — was 14px long, now 12px from nose to tail.
+function drawMoto(ctx, lightsOn, t, themeColors) {
+  // Body color comes from active vehicle theme if provided (player rig
+  // only). Default is BLACK per spec ("black motorcycle vehicle").
+  const body       = (themeColors && themeColors.body)      || '#0f1014';
+  const bodyAccent = (themeColors && themeColors.bodyShade) || '#26272e';
+  // Nose / front fairing — long, low, narrow at the tip. Drawn as a
+  // pentagon-ish silhouette tapering from the front wheel to the nose.
+  // Coord convention: +x = forward (nose), -x = back (tail).
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(11.5, -1.2);            // nose point upper
+  ctx.lineTo(11.5,  1.2);            // nose point lower
+  ctx.lineTo(7.5,   3.2);            // fairing flare
+  ctx.lineTo(2,     3.3);            // mid-fairing
+  ctx.lineTo(2,    -3.3);
+  ctx.lineTo(7.5,  -3.2);
+  ctx.closePath();
+  ctx.fill();
+  // Front wheel — hub visible from above, tucked under the nose.
+  ctx.fillStyle = '#0a0a0c';
+  ctx.fillRect(7, -2, 4.5, 4);
+  // Front disc-brake hint
+  ctx.fillStyle = '#5a5a64';
+  ctx.beginPath();
+  ctx.arc(9, 0, 1.4, 0, Math.PI * 2);
+  ctx.fill();
+  // Tank / mid-section — slightly wider than nose at the seam, narrows
+  // again at the seat. This is where the EMS Star-of-Life decal sits.
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(2,    -3.3);
+  ctx.lineTo(2,     3.3);
+  ctx.lineTo(-2,    3.5);            // widest at the tank
+  ctx.lineTo(-2,   -3.5);
+  ctx.closePath();
+  ctx.fill();
+  // Tank highlight (single curved stripe down the centerline)
+  ctx.fillStyle = bodyAccent;
+  ctx.fillRect(-1.5, -3.5, 3.5, 0.8);
+  ctx.fillRect(-1.5,  2.7, 3.5, 0.8);
+  // Star-of-Life decal on the tank (small, blue, between rider and nose)
+  ctx.fillStyle = '#118ab2';
+  for (let i = 0; i < 3; i++) {
+    ctx.save();
+    ctx.translate(0.5, 0);
+    ctx.rotate(i * Math.PI / 3);
+    ctx.fillRect(-0.35, -2.2, 0.7, 4.4);
+    ctx.restore();
+  }
+  // Rider torso (sits over the tank-seat junction). Uniform color
+  // varies with role just like the four-wheelers.
+  const isCems = (game && game.role === 'CEMS');
+  const uniform      = isCems ? '#1a2a55' : '#15161c';
+  const uniformLight = isCems ? '#2a3e75' : '#2a2c34';
+  ctx.fillStyle = uniform;
+  ctx.beginPath();
+  ctx.moveTo(-1.2, -3.2);
+  ctx.lineTo(-1.2,  3.2);
+  ctx.lineTo(-4.2,  3);
+  ctx.lineTo(-4.2, -3);
+  ctx.closePath();
+  ctx.fill();
+  // Reflective stripe across rider's back
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(-3.8, -0.5, 2.4, 0.7);
+  // Helmet (head). Black with a small glossy highlight.
+  ctx.fillStyle = '#0a0a0c';
+  ctx.beginPath();
+  ctx.ellipse(-2.5, 0, 2.4, 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Helmet visor — small forward-facing band, blue-tinted.
+  ctx.fillStyle = '#3a4a6a';
+  ctx.fillRect(-1.4, -1.4, 1.4, 2.8);
+  // Helmet shell highlight (off-center)
+  ctx.fillStyle = '#22232a';
+  ctx.beginPath();
+  ctx.ellipse(-3.2, -0.9, 0.9, 0.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Seat hump + pointy tail (rear section, narrows to a tip).
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-4.2, -3);              // seat front
+  ctx.lineTo(-4.2,  3);
+  ctx.lineTo(-7,    2.4);            // tail flares
+  ctx.lineTo(-10,   0.6);            // tail point upper
+  ctx.lineTo(-10,  -0.6);            // tail point lower
+  ctx.lineTo(-7,   -2.4);
+  ctx.closePath();
+  ctx.fill();
+  // Tail accent stripe
+  ctx.fillStyle = bodyAccent;
+  ctx.fillRect(-9, -0.4, 4, 0.8);
+  // Rear wheel — slightly wider than front (sportbike profile).
+  ctx.fillStyle = '#0a0a0c';
+  ctx.fillRect(-9.5, -2.4, 5, 4.8);
+  // Rear disc hint
+  ctx.fillStyle = '#5a5a64';
+  ctx.beginPath();
+  ctx.arc(-7.5, 0, 1.4, 0, Math.PI * 2);
+  ctx.fill();
+  // Exhaust pipe — small chrome can on the right side of the tail
+  ctx.fillStyle = '#a8b0c4';
+  ctx.fillRect(-9.5, 2, 3.5, 1);
+  // Tail / brake light (rear tip)
+  ctx.fillStyle = lightsOn ? '#ff3a3a' : '#5a1018';
+  ctx.fillRect(-10.2, -0.5, 0.6, 1);
+  // Headlight cluster (twin in the nose, sportbike style)
+  ctx.fillStyle = lightsOn ? '#fff5cc' : '#3a3a40';
+  ctx.fillRect(10.4, -1.7, 1.2, 1.3);
+  ctx.fillRect(10.4,  0.4, 1.2, 1.3);
+  // Frame outline (full silhouette stroke, very thin)
+  ctx.strokeStyle = '#06070a';
+  ctx.lineWidth = 0.4;
+  // Nose
+  ctx.beginPath();
+  ctx.moveTo(11.5, -1.2);
+  ctx.lineTo(11.5,  1.2);
+  ctx.lineTo(7.5,   3.2);
+  ctx.lineTo(-4.2,  3);
+  ctx.lineTo(-7,    2.4);
+  ctx.lineTo(-10,   0.6);
+  ctx.lineTo(-10,  -0.6);
+  ctx.lineTo(-7,   -2.4);
+  ctx.lineTo(-4.2, -3);
+  ctx.lineTo(7.5,  -3.2);
+  ctx.closePath();
+  ctx.stroke();
+  // Roof-style strobes (small lightbar on top of the windscreen).
+  // Sized for the sportbike — sits just behind the nose, in front of
+  // the rider. Pulses with the equipped lightbar style.
+  if (lightsOn) {
+    const lb = (themeColors && themeColors.lightbar) || null;
+    const pxA = (lb && lb.pixA) || '#ff4d6d';
+    const pxB = (lb && lb.pixB) || '#3aaaee';
+    const phase = Math.sin(t * 12);
+    ctx.fillStyle = phase > 0 ? pxA : '#5a1018';
+    ctx.fillRect(3.2, -1.5, 1.4, 1.3);
+    ctx.fillStyle = phase < 0 ? pxB : '#0a3a5a';
+    ctx.fillRect(3.2,  0.2, 1.4, 1.3);
+  }
 }
 function drawRoofLightbarWide(ctx, cx, cy, w, lightsOn, t, lightbarStyle) {
   const halfW = w / 2;
@@ -47365,7 +47788,12 @@ function loop(now) {
     // (game._quiz live) we additionally freeze the shift clock entirely so
     // a long study session can't burn through their shift. The clock
     // resumes the moment the quiz modal closes.
-    if (!game._quiz) {
+    // Stage 4 QOL: the GARAGE is a pre-shift lobby — it should NOT count
+    // against the player's shift clock. Freeze time-of-day advancement
+    // any time the active interior is the garage (the shift effectively
+    // hasn't started yet; the player presses E on the rig to begin).
+    const _inGarage = (game._interior && game._interior.kind === 'garage');
+    if (!game._quiz && !_inGarage) {
       game.shiftElapsedReal += dt;
       game.timeOfDay = ((8 / 24) + (game.shiftElapsedReal / 60) / 24) % 1;
       if (game.shiftElapsedReal >= game.shiftHours * 60) {
@@ -47525,11 +47953,16 @@ function closeMenu() {
 // loop. The loop is gated on game.mode === 'build' (set when the player
 // enters the build screen) so we don't burn CPU once the shift starts.
 // ------------------------------------------------------------------
-const VEHICLE_ORDER = ['ambo', 'squad', 'rescue'];
+// Stage 4 QOL: motorcycle is a premium unlock (Respect Shop). The
+// carousel filters this out unless respectState.owned.vehicles contains
+// 'moto' — so the order array can include it freely and selection UI
+// hides it for players who haven't bought it yet.
+const VEHICLE_ORDER = ['ambo', 'squad', 'rescue', 'moto'];
 const VEHICLE_LABELS = {
   ambo:   'Type III ambulance — full transport rig.',
   squad:  'Ford Explorer QRS — quick response, no transport.',
   rescue: 'Heavy rescue — fire-rescue rig with extrication gear.',
+  moto:   'EMS motorcycle — solo fly-car, fastest response, no transport.',
 };
 const ROLE_LABELS = {
   EMT:  'EMT — Basic Life Support, black duty uniform.',
@@ -47592,11 +48025,14 @@ function drawVehiclePreview(t) {
   if (rig === 'ambo')   drawAmbulanceFront3Q(ctx, strobe, t, _previewThemeColors);
   if (rig === 'squad')  drawSquadFront3Q(ctx, strobe, t, _previewThemeColors);
   if (rig === 'rescue') drawRescueFront3Q(ctx, strobe, t, _previewThemeColors);
+  if (rig === 'moto')   drawMotoFront3Q(ctx, strobe, t, _previewThemeColors);
   ctx.restore();
   // Character stands in front-left of the rig.
   ctx.save();
   ctx.translate(W * 0.22, H * 0.78);
-  drawCharacterFront(ctx, role, t);
+  // Stage 4 QOL: pass the vehicle type so the character function can
+  // swap a motorcycle helmet onto the head when 'moto' is selected.
+  drawCharacterFront(ctx, role, t, rig);
   ctx.restore();
 }
 // ----- VEHICLE: AMBULANCE (Type III box) -----
@@ -48048,15 +48484,315 @@ function drawStarOfLife(ctx, cx, cy, r, color) {
   ctx.fill();
   ctx.restore();
 }
+// ----- VEHICLE: MOTORCYCLE (front-3/4 preview, sportbike) -----
+// Sportbike profile inspired by a Ninja-style fairing — twin headlight
+// cluster, low slung nose, flowing tank, peaked tail. Camera is 3/4
+// from the right, so we see the right flank of the bike and the front.
+// themeColors.body controls the fairing color (default deep black).
+function drawMotoFront3Q(ctx, strobe, t, themeColors) {
+  const body       = (themeColors && themeColors.body)      || '#0a0a0c';
+  const bodyAccent = (themeColors && themeColors.bodyShade) || '#22232a';
+  const trimAccent = '#3a3f4a';
+  // ----- Ground shadow -----
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(-5, 0, 88, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // ----- Rear wheel (further from camera, slightly smaller in 3/4) -----
+  ctx.fillStyle = '#0a0a0c';
+  ctx.beginPath();
+  ctx.ellipse(58, -22, 20, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#26272e';
+  ctx.beginPath();
+  ctx.ellipse(58, -22, 13, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Rear disc brake (visible chrome rotor)
+  ctx.fillStyle = '#a8b0c4';
+  ctx.beginPath();
+  ctx.arc(58, -22, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0a0a0c';
+  for (let i = 0; i < 6; i++) {
+    ctx.save();
+    ctx.translate(58, -22);
+    ctx.rotate(i * Math.PI / 3 + t * 0.6);
+    ctx.fillRect(-0.8, -7, 1.6, 14);
+    ctx.restore();
+  }
+  ctx.fillStyle = '#5a5a64';
+  ctx.beginPath();
+  ctx.arc(58, -22, 2.8, 0, Math.PI * 2);
+  ctx.fill();
+  // ----- Front wheel (closer to camera, larger) -----
+  ctx.fillStyle = '#0a0a0c';
+  ctx.beginPath();
+  ctx.ellipse(-46, -26, 26, 28, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#26272e';
+  ctx.beginPath();
+  ctx.ellipse(-46, -26, 17, 19, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Front disc brake
+  ctx.fillStyle = '#a8b0c4';
+  ctx.beginPath();
+  ctx.arc(-46, -26, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0a0a0c';
+  for (let i = 0; i < 6; i++) {
+    ctx.save();
+    ctx.translate(-46, -26);
+    ctx.rotate(i * Math.PI / 3 + t * 0.6);
+    ctx.fillRect(-0.9, -9, 1.8, 18);
+    ctx.restore();
+  }
+  ctx.fillStyle = '#5a5a64';
+  ctx.beginPath();
+  ctx.arc(-46, -26, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+  // ----- Rear suspension / swing-arm -----
+  ctx.fillStyle = trimAccent;
+  ctx.beginPath();
+  ctx.moveTo(28, -36);
+  ctx.lineTo(54, -22);
+  ctx.lineTo(54, -18);
+  ctx.lineTo(28, -32);
+  ctx.closePath();
+  ctx.fill();
+  // ----- Lower fairing belly / engine cowl (under the tank) -----
+  ctx.fillStyle = bodyAccent;
+  ctx.beginPath();
+  ctx.moveTo(-30, -38);
+  ctx.lineTo(30,  -42);
+  ctx.lineTo(34,  -28);
+  ctx.lineTo(-26, -26);
+  ctx.closePath();
+  ctx.fill();
+  // Engine block (visible in the cutout between front wheel and tank)
+  ctx.fillStyle = '#1a1a1f';
+  ctx.fillRect(-22, -42, 30, 10);
+  ctx.fillStyle = '#3a3a40';
+  for (let fy = -40; fy < -32; fy += 2) {
+    ctx.fillRect(-22, fy, 30, 0.8);                    // engine fins
+  }
+  // ----- Front forks (long, angled, behind the front fender) -----
+  ctx.strokeStyle = trimAccent;
+  ctx.lineWidth = 4.5;
+  ctx.beginPath();
+  ctx.moveTo(-46, -50);
+  ctx.lineTo(-44, -90);                                 // upper fork
+  ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-50, -50);
+  ctx.lineTo(-48, -88);                                 // second fork (offset)
+  ctx.stroke();
+  // ----- Front fender (low over the front wheel) -----
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-62, -54);
+  ctx.lineTo(-30, -56);
+  ctx.lineTo(-26, -48);
+  ctx.lineTo(-66, -46);
+  ctx.closePath();
+  ctx.fill();
+  // ----- Main fairing / upper front face -----
+  // This is the dramatic angular plastic that wraps the headlight.
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-58, -100);                                // upper nose
+  ctx.lineTo(-22, -110);                                // top of fairing
+  ctx.lineTo(-6,  -100);                                // fairing peak
+  ctx.lineTo(0,   -70);                                 // tank-fairing seam
+  ctx.lineTo(-32, -64);                                 // lower fairing
+  ctx.lineTo(-50, -84);                                 // intake area
+  ctx.closePath();
+  ctx.fill();
+  // Fairing highlight (subtle lighter wedge near the top)
+  ctx.fillStyle = bodyAccent;
+  ctx.beginPath();
+  ctx.moveTo(-50, -100);
+  ctx.lineTo(-22, -108);
+  ctx.lineTo(-14, -98);
+  ctx.lineTo(-40, -94);
+  ctx.closePath();
+  ctx.fill();
+  // ----- Twin headlight cluster (the angular sportbike eyes) -----
+  // Left light (further from camera, smaller in perspective)
+  ctx.fillStyle = strobe ? '#fff5cc' : '#22232a';
+  ctx.beginPath();
+  ctx.moveTo(-44, -94);
+  ctx.lineTo(-30, -98);
+  ctx.lineTo(-24, -90);
+  ctx.lineTo(-38, -84);
+  ctx.closePath();
+  ctx.fill();
+  // Right light (closer, larger, more dramatic)
+  ctx.beginPath();
+  ctx.moveTo(-28, -98);
+  ctx.lineTo(-10, -100);
+  ctx.lineTo(-4,  -90);
+  ctx.lineTo(-22, -86);
+  ctx.closePath();
+  ctx.fill();
+  // Headlight inner glow when on
+  if (strobe) {
+    ctx.fillStyle = 'rgba(255, 245, 200, 0.55)';
+    ctx.beginPath();
+    ctx.ellipse(-32, -90, 5, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(-14, -92, 6, 3.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Headlight border / divider
+  ctx.strokeStyle = '#06070a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-44, -94); ctx.lineTo(-30, -98); ctx.lineTo(-24, -90); ctx.lineTo(-38, -84); ctx.closePath();
+  ctx.moveTo(-28, -98); ctx.lineTo(-10, -100); ctx.lineTo(-4, -90); ctx.lineTo(-22, -86); ctx.closePath();
+  ctx.stroke();
+  // ----- Windscreen (tinted plastic above the headlights) -----
+  ctx.fillStyle = 'rgba(58, 74, 106, 0.65)';
+  ctx.beginPath();
+  ctx.moveTo(-22, -110);
+  ctx.lineTo(-6,  -100);
+  ctx.lineTo(0,   -118);
+  ctx.lineTo(-18, -128);
+  ctx.closePath();
+  ctx.fill();
+  // Windscreen highlight
+  ctx.fillStyle = 'rgba(120, 140, 180, 0.35)';
+  ctx.beginPath();
+  ctx.moveTo(-18, -120);
+  ctx.lineTo(-8,  -114);
+  ctx.lineTo(-6,  -118);
+  ctx.lineTo(-16, -126);
+  ctx.closePath();
+  ctx.fill();
+  // ----- Strobe lightbar on top of the windscreen -----
+  if (strobe) {
+    ctx.fillStyle = '#ff4d6d';
+    ctx.fillRect(-22, -132, 10, 4);
+    ctx.fillStyle = '#3aaaee';
+    ctx.fillRect(-10, -132, 10, 4);
+  } else {
+    ctx.fillStyle = '#5a1018';
+    ctx.fillRect(-22, -132, 10, 4);
+    ctx.fillStyle = '#0a3a5a';
+    ctx.fillRect(-10, -132, 10, 4);
+  }
+  ctx.strokeStyle = '#06070a';
+  ctx.lineWidth = 0.8;
+  ctx.strokeRect(-22, -132, 20, 4);
+  // ----- Handlebars + clip-ons (low and aggressive, sportbike style) -----
+  ctx.strokeStyle = '#1a1a1f';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-30, -98);
+  ctx.lineTo(-14, -102);
+  ctx.stroke();
+  // Grips
+  ctx.fillStyle = '#3a3a40';
+  ctx.fillRect(-32, -100, 4, 5);
+  ctx.fillRect(-16, -104, 4, 5);
+  // ----- Tank (the iconic sportbike teardrop, sits behind the fairing) -----
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(0,  -100);                                  // front of tank
+  ctx.lineTo(34, -94);                                   // top peak
+  ctx.lineTo(46, -76);                                   // rear of tank
+  ctx.lineTo(40, -64);                                   // tank-seat seam
+  ctx.lineTo(2,  -68);                                   // tank-fairing junction
+  ctx.closePath();
+  ctx.fill();
+  // Tank highlight (lighter wedge along the top)
+  ctx.fillStyle = bodyAccent;
+  ctx.beginPath();
+  ctx.moveTo(2,  -94);
+  ctx.lineTo(30, -90);
+  ctx.lineTo(38, -82);
+  ctx.lineTo(8,  -82);
+  ctx.closePath();
+  ctx.fill();
+  // Star-of-Life decal on the tank
+  ctx.fillStyle = '#118ab2';
+  ctx.save();
+  ctx.translate(20, -78);
+  for (let i = 0; i < 3; i++) {
+    ctx.save(); ctx.rotate(i * Math.PI / 3);
+    ctx.fillRect(-1.6, -7, 3.2, 14);
+    ctx.restore();
+  }
+  ctx.restore();
+  // "EMS" lettering on the tank (white)
+  ctx.fillStyle = '#f4f1de';
+  ctx.font = 'bold 7px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('EMS', 34, -78);
+  // ----- Seat (saddle + pillion hump, characteristic Ninja silhouette) -----
+  ctx.fillStyle = '#0a0a0c';
+  ctx.beginPath();
+  ctx.moveTo(40, -64);                                   // seat front
+  ctx.lineTo(64, -58);                                   // seat rear hump
+  ctx.lineTo(64, -50);
+  ctx.lineTo(40, -54);
+  ctx.closePath();
+  ctx.fill();
+  // ----- Tail section (pointed, with brake light) -----
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(64, -58);
+  ctx.lineTo(78, -54);                                   // tail tip
+  ctx.lineTo(78, -42);
+  ctx.lineTo(64, -50);
+  ctx.closePath();
+  ctx.fill();
+  // Tail accent
+  ctx.fillStyle = bodyAccent;
+  ctx.fillRect(66, -52, 11, 1.5);
+  // Brake light
+  ctx.fillStyle = strobe ? '#ff3a3a' : '#5a1018';
+  ctx.fillRect(74, -48, 4, 2.5);
+  // ----- Exhaust (chrome can, mounted right side under the seat) -----
+  ctx.fillStyle = '#3a3a40';
+  ctx.fillRect(38, -42, 24, 4);
+  ctx.fillStyle = '#a8b0c4';
+  ctx.beginPath();
+  ctx.arc(62, -40, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#1a1a1f';
+  ctx.beginPath();
+  ctx.arc(62, -40, 1.4, 0, Math.PI * 2);
+  ctx.fill();
+  // ----- Final outline strokes for shape pop -----
+  ctx.strokeStyle = bodyAccent;
+  ctx.lineWidth = 0.8;
+  // Tank outline
+  ctx.beginPath();
+  ctx.moveTo(0,  -100); ctx.lineTo(34, -94); ctx.lineTo(46, -76);
+  ctx.lineTo(40, -64); ctx.lineTo(2,  -68); ctx.closePath();
+  ctx.stroke();
+  // Tail outline
+  ctx.beginPath();
+  ctx.moveTo(64, -58); ctx.lineTo(78, -54); ctx.lineTo(78, -42);
+  ctx.lineTo(64, -50); ctx.closePath();
+  ctx.stroke();
+}
 // ----- CHARACTER: front view, role-specific uniform -----
 // Simple flat figure. Local origin = bottom of feet, centered. Total
 // height ~140px so it reads at the canvas scale. Each role differs in
 // uniform color, accessories, and small details.
-function drawCharacterFront(ctx, role, t) {
+function drawCharacterFront(ctx, role, t, vehicle) {
   // Subtle breathing animation — small vertical bob.
   const bob = Math.sin(t * 1.4) * 1.2;
   ctx.save();
   ctx.translate(0, bob);
+  // Stage 4 QOL: motorcycle rider gets a full-face helmet (covers head
+  // + obscures hair and eyes). Detected once here so the head section
+  // below can branch.
+  const isMoto = (vehicle === 'moto');
   // Color tokens vary by role.
   let uniformTop, uniformBot, accent, hatColor, hasSteth, hasJumpkit;
   if (role === 'CEMS') {
@@ -48293,28 +49029,70 @@ function drawCharacterFront(ctx, role, t) {
   ctx.fillStyle = '#3a3f4a';
   ctx.fillRect(-18, -90, 1, 1);
   // ----- Head -----
-  ctx.fillStyle = '#d6b594';     // skin
-  ctx.beginPath();
-  ctx.arc(0, -110, 12, 0, Math.PI * 2);
-  ctx.fill();
-  // Hair cap.
-  ctx.fillStyle = '#3a2818';
-  ctx.beginPath();
-  ctx.arc(0, -112, 12, Math.PI, Math.PI * 2);
-  ctx.fill();
-  // Eyes (tiny dots).
-  ctx.fillStyle = '#1a1a1f';
-  ctx.beginPath();
-  ctx.arc(-4, -110, 1, 0, Math.PI * 2);
-  ctx.arc(4,  -110, 1, 0, Math.PI * 2);
-  ctx.fill();
-  // Mouth.
-  ctx.strokeStyle = '#7f3a2a';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(-2, -104);
-  ctx.lineTo(2, -104);
-  ctx.stroke();
+  if (isMoto) {
+    // Stage 4 QOL: motorcycle helmet — full-face matte black with a
+    // tinted visor and small EMS Star-of-Life decal on the side.
+    // Outer shell.
+    ctx.fillStyle = '#0a0a0c';
+    ctx.beginPath();
+    ctx.arc(0, -110, 13.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Subtle shell highlight (top, off-center).
+    ctx.fillStyle = '#22232a';
+    ctx.beginPath();
+    ctx.arc(-3, -116, 6, 0, Math.PI * 2);
+    ctx.fill();
+    // Chin bar (the lower part of a full-face helmet).
+    ctx.fillStyle = '#15161c';
+    ctx.fillRect(-12, -104, 24, 6);
+    // Visor — wide horizontal band, dark blue-tinted glass.
+    ctx.fillStyle = '#1a2638';
+    ctx.fillRect(-11, -114, 22, 7);
+    // Visor highlight (reflection).
+    ctx.fillStyle = '#3a4a6a';
+    ctx.fillRect(-9, -113, 6, 2);
+    ctx.fillRect(3,  -113, 4, 1.5);
+    // Visor frame (thin border).
+    ctx.strokeStyle = '#06070a';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-11, -114, 22, 7);
+    // Vent slits on the chin bar.
+    ctx.fillStyle = '#3a3a40';
+    ctx.fillRect(-4, -101, 2, 1);
+    ctx.fillRect(0,  -101, 2, 1);
+    // Star-of-Life decal on the side of the helmet (small, blue, lower-left).
+    ctx.fillStyle = '#118ab2';
+    for (let i = 0; i < 3; i++) {
+      ctx.save();
+      ctx.translate(-10, -108);
+      ctx.rotate(i * Math.PI / 3);
+      ctx.fillRect(-0.4, -1.8, 0.8, 3.6);
+      ctx.restore();
+    }
+  } else {
+    ctx.fillStyle = '#d6b594';     // skin
+    ctx.beginPath();
+    ctx.arc(0, -110, 12, 0, Math.PI * 2);
+    ctx.fill();
+    // Hair cap.
+    ctx.fillStyle = '#3a2818';
+    ctx.beginPath();
+    ctx.arc(0, -112, 12, Math.PI, Math.PI * 2);
+    ctx.fill();
+    // Eyes (tiny dots).
+    ctx.fillStyle = '#1a1a1f';
+    ctx.beginPath();
+    ctx.arc(-4, -110, 1, 0, Math.PI * 2);
+    ctx.arc(4,  -110, 1, 0, Math.PI * 2);
+    ctx.fill();
+    // Mouth.
+    ctx.strokeStyle = '#7f3a2a';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-2, -104);
+    ctx.lineTo(2, -104);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 // ----- ETYPE GLYPHS -----
@@ -48428,7 +49206,18 @@ function carouselStep(dir) {
     try { return sessionStorage.getItem('emsq_unlock_rescue') === '1'; }
     catch (e) { return false; }
   })();
-  const order = VEHICLE_ORDER.filter(v => v !== 'rescue' || isRescueUnlocked);
+  // Stage 4 QOL: moto is unlocked persistently via the Respect Shop
+  // (respectState.owned.vehicles). Differs from rescue (session-only
+  // cheat-code unlock) since the player paid 1000 Respect.
+  const isMotoUnlocked = (function () {
+    try { return (respectState && respectState.owned && respectState.owned.vehicles
+                  && respectState.owned.vehicles.indexOf('moto') !== -1); }
+    catch (e) { return false; }
+  })();
+  const order = VEHICLE_ORDER.filter(v =>
+    (v !== 'rescue' || isRescueUnlocked) &&
+    (v !== 'moto'   || isMotoUnlocked)
+  );
   if (order.length === 0) return;     // defensive — shouldn't happen
   const idx = order.indexOf(game.vehicle);
   let next;
@@ -48650,7 +49439,13 @@ function setupSelect() {
   document.getElementById('back-to-scene-btn').addEventListener('click', backToScene);
   document.getElementById('debrief-continue').addEventListener('click', continueAfterDebrief);
   document.getElementById('retry-btn').addEventListener('click', retry);
-  document.getElementById('go-back-select').addEventListener('click', returnToSelect);
+  // Stage 4 QOL: BACK TO CHARACTER SELECT button removed from game-over —
+  // START NEW SHIFT supersedes it.
+  const _goBackBtn = document.getElementById('go-back-select');
+  if (_goBackBtn) _goBackBtn.addEventListener('click', returnToSelect);
+  // Stage 4 QOL: new BACK TO TITLE button on game-over.
+  const _goTitleBtn = document.getElementById('go-title-btn');
+  if (_goTitleBtn) _goTitleBtn.addEventListener('click', returnToSelect);
   document.getElementById('menu-btn').addEventListener('click', openMenu);
   // Stage 2.5: fullscreen toggle. Uses native Fullscreen API. Falls back
   // gracefully on browsers that block it without user gesture (rare).
@@ -48704,7 +49499,15 @@ function setupSelect() {
     document.getElementById('shift-end').style.display = 'none';
     startShift();
   });
-  document.getElementById('se-back').addEventListener('click', returnToSelect);
+  // Stage 4 QOL: BACK TO CHARACTER SELECT button removed from shift-end —
+  // NEW SHIFT supersedes it. Handler bind is guarded so the absent
+  // element doesn't NPE on older builds.
+  const _seBackBtn = document.getElementById('se-back');
+  if (_seBackBtn) _seBackBtn.addEventListener('click', returnToSelect);
+  // Stage 4 QOL: new BACK TO TITLE button on shift-end — players asked
+  // for an exit besides NEW SHIFT.
+  const _seTitleBtn = document.getElementById('se-title-btn');
+  if (_seTitleBtn) _seTitleBtn.addEventListener('click', returnToSelect);
   // Stage 1.5: title-screen flow.
   // PLAY → hide title, show build screen.
   document.getElementById('title-play-btn').addEventListener('click', () => {
@@ -48734,6 +49537,18 @@ function setupSelect() {
     try { rescueUnlocked = sessionStorage.getItem('emsq_unlock_rescue') === '1'; }
     catch (e) { rescueUnlocked = false; }
     if (game.vehicle === 'rescue' && !rescueUnlocked) {
+      game.vehicle = null;
+      document.querySelectorAll('#vehicle-opts .opt').forEach(b => b.classList.remove('selected'));
+    }
+    // Stage 4 QOL: same defensive clear for moto in case the player
+    // somehow lands here without owning the unlock (shouldn't happen
+    // since owned-state is persistent, but cheap insurance).
+    let motoUnlocked = false;
+    try {
+      motoUnlocked = (respectState && respectState.owned && respectState.owned.vehicles
+                      && respectState.owned.vehicles.indexOf('moto') !== -1);
+    } catch (_eMU) {}
+    if (game.vehicle === 'moto' && !motoUnlocked) {
       game.vehicle = null;
       document.querySelectorAll('#vehicle-opts .opt').forEach(b => b.classList.remove('selected'));
     }
@@ -48808,6 +49623,18 @@ function setupSelect() {
         const card = document.getElementById('vehicle-card-rescue');
         if (card) card.classList.remove('locked-rescue');
       }
+      // Stage 4 QOL: MOTORCYCLE unlock — Respect Shop purchase, persists
+      // to localStorage via respectState.owned.vehicles. Different pattern
+      // from rescue (session-only cheat code) since the player paid 1000
+      // Respect for it. respectState is loaded in _respectShopInit before
+      // setupSelect runs, so the check is safe here.
+      try {
+        if (respectState && respectState.owned && respectState.owned.vehicles
+            && respectState.owned.vehicles.indexOf('moto') !== -1) {
+          const motoCard = document.getElementById('vehicle-card-moto');
+          if (motoCard) motoCard.classList.remove('locked-moto');
+        }
+      } catch (_eMoto) {}
     } catch (e) { /* sessionStorage may be blocked — fail silently */ }
   }
   // Stage 2.0t: clean up any leftover localStorage flag from earlier builds
@@ -48824,9 +49651,20 @@ function setupSelect() {
       if (!raw) return;
       switch (raw) {
         case 'AEMT': {
+          // Original behavior: unlock the AEMT ROLE in character select.
           try { sessionStorage.setItem('emsq_unlock_aemt', '1'); } catch (e) {}
           applyCodeUnlocks();
-          codesFeedback.textContent = '\u2713 AEMT unlocked (this session)';
+          // Stage 4 QOL: same code now ALSO unlocks the three AEMT
+          // training rooms (Airway, Meds, Interventions) for this
+          // session. Session-only (plain JS flag, not localStorage)
+          // matches the user's "must be put in before starting; doesn't
+          // save across shifts" requirement.
+          _aemtSessionUnlocked = true;
+          // Re-render shop + training list if either is currently open
+          // so the rooms appear immediately.
+          try { if (typeof renderRespectShop === 'function') renderRespectShop(); } catch (_e) {}
+          try { if (typeof renderTrainingMenu === 'function') renderTrainingMenu(); } catch (_e) {}
+          codesFeedback.textContent = '\u2713 AEMT role + training rooms unlocked (this session)';
           codesFeedback.style.color = '#06d6a0';
           break;
         }
@@ -48883,6 +49721,29 @@ function setupSelect() {
           _oneTimePlayerNameOverride = 'Annika';
           codesFeedback.textContent = '\u2713 Next shift\u2019s name: Annika';
           codesFeedback.style.color = '#06d6a0';
+          break;
+        }
+        // Stage 4 QOL: TRAINING code grants +10,000 spendable Respect.
+        // Mirrors the RESPECT cheat (+10k respect), but uses a separate
+        // one-time-use localStorage key so testers can claim BOTH (total
+        // +20k available across the two codes). Cosmetic-only.
+        case 'TRAINING': {
+          let alreadyUsed = false;
+          try { alreadyUsed = (localStorage.getItem('emsq_training_code_used_v1') === '1'); } catch (_eTC) {}
+          if (alreadyUsed) {
+            codesFeedback.textContent = '\u2717 TRAINING code already redeemed';
+            codesFeedback.style.color = '#ef4444';
+            break;
+          }
+          try {
+            respectState.totalRespect          += 10000;
+            respectState.lifetimeRespectEarned += 10000;
+            saveRespectState();
+            localStorage.setItem('emsq_training_code_used_v1', '1');
+            _renderTitleRespectDisplay();
+          } catch (_eT) {}
+          codesFeedback.textContent = '\u2713 +10,000 RESPECT banked (one-time)';
+          codesFeedback.style.color = '#ffd166';
           break;
         }
         default: {
@@ -49105,6 +49966,11 @@ function startShift() {
   // egg. Must run BEFORE chunks are first built this shift.
   finalizeSpecialBuildingsForRole();
   document.getElementById('hud-role').textContent = roleDisplay(game.role);
+  // Stage 4 QOL: motorcycle has less protection than a four-wheel rig
+  // — 3 hearts instead of 5. Sets maxHp first so renderHP picks up the
+  // smaller maximum (don't change MAX_HP — keep it as the ceiling for
+  // other vehicles).
+  game.maxHp = (game.vehicle === 'moto') ? 3 : MAX_HP;
   game.hp = game.maxHp;
   game.patientsSaved = 0;
   document.getElementById('hud-saved').textContent = 0;
@@ -49827,7 +50693,7 @@ function _renderCareerSummaryInto(screenId) {
   const el = document.createElement('div');
   el.id = 'career-summary';
   el.style.cssText =
-    'margin:14px auto 6px; max-width:420px; padding:10px 14px; ' +
+    'margin:14px auto 6px; max-width:560px; padding:10px 16px; ' +
     'background:rgba(255,255,255,0.04); border:1px solid #3a3a4e; ' +
     'border-radius:6px; font-size:12px; color:#f4f1de; text-align:left;';
   el.innerHTML =
@@ -50574,13 +51440,49 @@ const RESPECT_SHOP_ITEMS = [
   { id:'decor_pennant',  category:'garageDecor', applyId:'pennant',  name:'Squad Pennant',   description:'A red-and-gold squad pennant.',                   cost:150, defaultOwned:false },
   { id:'decor_vending',  category:'garageDecor', applyId:'vending',  name:'Vending Machine', description:'A snack machine — for the long shifts.',          cost:175, defaultOwned:false },
   { id:'decor_plaque',   category:'garageDecor', applyId:'plaque',   name:'Award Plaque',    description:'A service-award plaque on the wall.',             cost:200, defaultOwned:false },
-  { id:'decor_fishtank', category:'garageDecor', applyId:'fishtank', name:'Fish Tank',       description:'A small bubbling aquarium for the dayroom.',     cost:250, defaultOwned:false }
+  { id:'decor_fishtank', category:'garageDecor', applyId:'fishtank', name:'Fish Tank',       description:'A small bubbling aquarium for the dayroom.',     cost:250, defaultOwned:false },
+
+  // ===== Stage 4 — TRAINING ROOMS (EMT practice modules) =====
+  // Unlock-only items: buying them adds them to owned, which the
+  // Garage / Training menu reads to gate which rooms can be entered.
+  { id:'training_airway_lab',     category:'trainingRooms', applyId:'airway_lab',           name:'Airway Lab',            cost:150, defaultOwned:false,
+    description:'Practice EMT airway decisions, positioning, suction, adjuncts, oxygen, and BVM basics.' },
+  { id:'training_vitals_lab',     category:'trainingRooms', applyId:'vitals_lab',           name:'Vitals Lab',            cost:150, defaultOwned:false,
+    description:'Practice interpreting EMT vital signs and deciding what they suggest.' },
+  { id:'training_radio_report',   category:'trainingRooms', applyId:'radio_report_room',    name:'Radio Report Room',     cost:200, defaultOwned:false,
+    description:'Practice concise EMS radio reports and ALS/ED handoffs.' },
+  { id:'training_refusal',        category:'trainingRooms', applyId:'refusal_practice_room',name:'Refusal Practice Room', cost:250, defaultOwned:false,
+    description:'Practice safe EMT refusal conversations using capacity, risks, teach-back, and return precautions.' },
+  { id:'training_trauma_triage',  category:'trainingRooms', applyId:'trauma_triage_room',   name:'Trauma Triage Room',    cost:300, defaultOwned:false,
+    description:'Practice START-style MCI triage and trauma priority decisions at the EMT level.' },
+  // AEMT-gated training rooms — hidden in the shop UI unless the AEMT
+  // code has been entered this session. Still cost Respect to unlock.
+  { id:'training_aemt_airway',     category:'trainingRooms', applyId:'aemt_airway_lab',        name:'AEMT Airway Lab',         cost:350, defaultOwned:false, aemtOnly:true,
+    description:'Practice AEMT advanced airway decisions \u2014 supraglottic devices, capnography, escalation.' },
+  { id:'training_aemt_meds',       category:'trainingRooms', applyId:'aemt_meds_lab',          name:'AEMT Medications Lab',    cost:400, defaultOwned:false, aemtOnly:true,
+    description:'Practice AEMT medications \u2014 epi, glucose, naloxone, Solu-Medrol, Tylenol, glucagon, more.' },
+  { id:'training_aemt_interventions', category:'trainingRooms', applyId:'aemt_interventions_lab', name:'AEMT Interventions Lab', cost:400, defaultOwned:false, aemtOnly:true,
+    description:'Practice AEMT interventions \u2014 CPAP vs BiPAP, IV/IO indications, ALS escalation criteria.' },
+  // ===== Stage 4 — RIGS (vehicle unlocks) =====
+  // The motorcycle is a premium fly-car unlock. After purchase, the
+  // character-select carousel surfaces it as a 4th vehicle option
+  // (alongside ambo / squad / rescue). 1000 Respect — the priciest
+  // single item in the shop, intentionally — to make it feel earned.
+  { id:'vehicle_moto', category:'vehicles', applyId:'moto', name:'EMS Motorcycle', cost:1000, defaultOwned:false,
+    description:'Black EMS fly-car bike. Solo response, fastest acceleration, no patient transport. Unlocks at character select.' }
 ];
 
 // Categories that hold a single equipped item (radio-button style).
 const _RESPECT_SINGLE_SLOT_CATS = ['vehicleThemes','lightbars','unitNumbers','titleBadges','partnerFrames'];
 // Categories that allow multiple equipped items (checkbox style).
-const _RESPECT_MULTI_SLOT_CATS  = ['garageDecor'];
+// Stage 4 QOL: trainingRooms is unlock-only — buying = unlocking forever,
+// no separate "equip" step. Treated as multi-slot for plumbing purposes
+// so each room is owned independently; the render special-cases the
+// "EQUIP / EQUIPPED" labels to read "UNLOCKED" instead.
+// Stage 4 QOL: 'vehicles' is also unlock-only — buying a rig (motorcycle
+// is the only one for now) just adds it to the carousel; you still pick
+// it on the character-select screen.
+const _RESPECT_MULTI_SLOT_CATS  = ['garageDecor', 'trainingRooms', 'vehicles'];
 // Maps category → respectState.active slot name.
 const _RESPECT_ACTIVE_SLOT_MAP = {
   vehicleThemes: 'vehicleTheme',
@@ -50588,7 +51490,9 @@ const _RESPECT_ACTIVE_SLOT_MAP = {
   unitNumbers:   'unitNumber',
   titleBadges:   'titleBadge',
   partnerFrames: 'partnerFrame',
-  garageDecor:   'garageDecor'   // array
+  garageDecor:   'garageDecor',  // array
+  trainingRooms: 'trainingRooms',// array (mirrors owned — unlock-only)
+  vehicles:      'vehicles'      // array (mirrors owned — unlock-only)
 };
 
 // Currently-active shop tab in the modal. Persists across re-renders
@@ -50603,11 +51507,13 @@ function loadRespectState() {
   respectState.lifetimeRespectEarned = 0;
   respectState.owned = {
     vehicleThemes: [], lightbars: [], unitNumbers: [],
-    titleBadges: [], partnerFrames: [], garageDecor: []
+    titleBadges: [], partnerFrames: [], garageDecor: [],
+    trainingRooms: [], vehicles: []
   };
   respectState.active = {
     vehicleTheme: 'default', lightbar: 'default', unitNumber: 'default',
-    titleBadge: 'none', partnerFrame: 'default', garageDecor: []
+    titleBadge: 'none', partnerFrame: 'default',
+    garageDecor: [], trainingRooms: [], vehicles: []
   };
   try {
     const t = localStorage.getItem(_RESPECT_KEY_TOTAL);
@@ -50639,6 +51545,8 @@ function loadRespectState() {
         if (typeof parsed.titleBadge === 'string')   respectState.active.titleBadge = parsed.titleBadge;
         if (typeof parsed.partnerFrame === 'string') respectState.active.partnerFrame = parsed.partnerFrame;
         if (Array.isArray(parsed.garageDecor))       respectState.active.garageDecor = parsed.garageDecor.slice();
+        if (Array.isArray(parsed.trainingRooms))     respectState.active.trainingRooms = parsed.trainingRooms.slice();
+        if (Array.isArray(parsed.vehicles))          respectState.active.vehicles = parsed.vehicles.slice();
       }
     }
   } catch (_e) {}
@@ -50661,6 +51569,13 @@ function loadRespectState() {
   respectState.active.garageDecor = respectState.active.garageDecor.filter(
     id => respectState.owned.garageDecor.indexOf(id) !== -1
   );
+  // Stage 4 QOL: training rooms are unlock-only — active list always
+  // mirrors owned list, so all unlocked rooms are accessible.
+  respectState.active.trainingRooms = respectState.owned.trainingRooms.slice();
+  // Stage 4 QOL: vehicles are unlock-only too — active list always
+  // mirrors owned. Selection of which rig to drive happens on the
+  // character-select screen, not in the shop.
+  respectState.active.vehicles = respectState.owned.vehicles.slice();
 }
 function saveRespectState() {
   try { localStorage.setItem(_RESPECT_KEY_TOTAL,    String(respectState.totalRespect)); } catch (_e) {}
@@ -50761,6 +51676,30 @@ function buyRespectItem(itemId) {
   if (respectState.totalRespect < item.cost) return { ok: false, reason: 'insufficient' };
   respectState.totalRespect -= item.cost;
   ownedList.push(item.applyId);
+  // Stage 4 QOL: trainingRooms are unlock-only — sync active mirror so
+  // the shop UI and the garage menu both see the room as unlocked.
+  if (item.category === 'trainingRooms') {
+    if (respectState.active.trainingRooms.indexOf(item.applyId) === -1) {
+      respectState.active.trainingRooms.push(item.applyId);
+    }
+  }
+  // Stage 4 QOL: vehicles are unlock-only — same pattern. Sync active
+  // so the character-select carousel sees the new rig immediately.
+  if (item.category === 'vehicles') {
+    if (respectState.active.vehicles.indexOf(item.applyId) === -1) {
+      respectState.active.vehicles.push(item.applyId);
+    }
+    // Reveal the corresponding picker card without waiting for a
+    // setupSelect re-run. This catches the case where the player buys
+    // the moto from the shift-end shop deep-link and then heads to
+    // character select for the next shift.
+    try {
+      if (item.applyId === 'moto') {
+        const motoCard = document.getElementById('vehicle-card-moto');
+        if (motoCard) motoCard.classList.remove('locked-moto');
+      }
+    } catch (_eMC) {}
+  }
   try { saveRespectState(); } catch (_e) {}
   try { _renderTitleRespectDisplay(); } catch (_e) {}
   return { ok: true, item: item };
@@ -50773,6 +51712,13 @@ function equipRespectItem(itemId) {
     return { ok: false, reason: 'not_owned' };
   }
   const slot = _RESPECT_ACTIVE_SLOT_MAP[item.category];
+  // Stage 4 QOL: trainingRooms AND vehicles are unlock-only — should
+  // not be reached through the EQUIP button (the shop renders ENTER /
+  // SELECT IN PICKER labels instead) but if they are, no-op so we
+  // don't accidentally remove an unlock.
+  if (item.category === 'trainingRooms' || item.category === 'vehicles') {
+    return { ok: true, item: item };
+  }
   if (_RESPECT_MULTI_SLOT_CATS.indexOf(item.category) !== -1) {
     // Multi-slot (garage decor): toggle in/out of the array.
     const arr = respectState.active[slot];
@@ -50870,24 +51816,42 @@ function _applyPartnerFrameStyle() {
     bub.style.borderColor = color;
     bub.style.borderLeftColor = color;
   }
-  // Stage 4 QOL: also color the PARTNER chat-tab button border so the
-  // frame reads even before the speech bubble has fired. Skip when the
-  // partner tab is the SELECTED one (selected style overrides anyway).
+  // Also color the PARTNER chat-tab button border so the frame reads
+  // even before the speech bubble has fired. Skip when the partner tab
+  // is SELECTED (selected style overrides anyway).
   const tab = document.getElementById('chat-tab-partner');
   if (tab && !tab.classList.contains('selected')) {
     tab.style.borderColor = color;
     tab.style.color = color;
   }
-  // Stage 4 QOL: the persistent PARTNER pill in the right panel. Border
-  // color + name color both follow the frame so the cosmetic is visible
-  // every frame of every shift.
-  const pill = document.getElementById('partner-pill');
-  if (pill) {
-    pill.style.borderColor = color;
-    pill.style.boxShadow = '0 0 12px ' + _hexToRgba(color, 0.25);
+  // Stage 4 QOL: the partner's CREW card in the left HUD now wears the
+  // frame — border, EKG trace, HP bar fill all switch to the equipped
+  // color while the partner is alive. Mirrors what the user wanted:
+  // the cosmetic upgrade reads on the player's own crew, not in a
+  // separate top-right pill.
+  const partnerCard = document.querySelector('#crew-cards [data-crew-role=\"partner\"]');
+  if (!partnerCard) return;
+  // Only paint the frame when the partner is alive — if they're down,
+  // the card uses the muted "down" palette and the frame color would
+  // misrepresent status. We detect "alive" cheaply via the existing
+  // opacity style the renderer applies.
+  const alive = partnerCard.style.opacity !== '0.55';
+  if (!alive) return;
+  // Border + soft glow on the card.
+  partnerCard.style.borderColor = color;
+  partnerCard.style.boxShadow = '0 0 8px ' + _hexToRgba(color, 0.35);
+  // EKG path stroke (animated trace inside the card's SVG).
+  const ekgPath = partnerCard.querySelector('.crew-ekg-path');
+  if (ekgPath) {
+    ekgPath.setAttribute('stroke', color);
+    ekgPath.style.filter = 'drop-shadow(0 0 2px ' + _hexToRgba(color, 0.7) + ')';
   }
-  const pillName = document.getElementById('partner-pill-name');
-  if (pillName) pillName.style.color = color;
+  // HP bar fill + its glow.
+  const hpFill = partnerCard.querySelector('.crew-hp-fill');
+  if (hpFill) {
+    hpFill.style.background = color;
+    hpFill.style.boxShadow = '0 0 4px ' + color;
+  }
 }
 // Helper: convert "#RRGGBB" to "rgba(r,g,b,a)". Returns the input as-is
 // if it's already an rgba/rgb string or not a valid 6-digit hex.
@@ -50899,20 +51863,14 @@ function _hexToRgba(hex, alpha) {
   if (isNaN(r) || isNaN(g) || isNaN(b)) return hex;
   return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
 }
-// Refresh the partner pill content. Called whenever game.partner changes
-// (initPartner, resumeSavedShift, etc.). Idempotent — safe to call any
-// number of times. Shows the pill only when a partner is set.
+// Stage 4 QOL: pill removed — frame now styles the crew card directly.
+// Keep this function as a no-op shim because several boot-time call
+// sites still invoke it; removing the calls would touch a dozen places.
 function _refreshPartnerPill() {
-  const pill = document.getElementById('partner-pill');
-  const nameEl = document.getElementById('partner-pill-name');
-  if (!pill || !nameEl) return;
-  if (game && game.partner && game.partner.name) {
-    nameEl.textContent = game.partner.name;
-    pill.style.display = 'flex';
-  } else {
-    pill.style.display = 'none';
-  }
-  try { _applyPartnerFrameStyle(); } catch (_e) {}
+  try { renderCrewIndicator(); } catch (_e) {}
+}
+function _partnerPortraitSVG() {
+  return '';     // unused after pill removal — kept for any stale callers
 }
 
 // ----- SHOP MODAL OPEN/CLOSE + RENDER -----------------------------
@@ -50976,7 +51934,13 @@ function renderRespectShop() {
   // Render the list for the active tab.
   const listEl = document.getElementById('respect-shop-list');
   if (!listEl) return;
-  const items = RESPECT_SHOP_ITEMS.filter(it => it.category === _respectShopTab);
+  // Stage 4 QOL: AEMT-only items (training rooms gated by the AEMT
+  // cheat code) are hidden from the shop UI until the code has been
+  // entered this session. Items themselves remain in the catalog so
+  // saved unlocks survive; only the render is filtered.
+  const items = RESPECT_SHOP_ITEMS.filter(it =>
+    it.category === _respectShopTab && (!it.aemtOnly || _aemtSessionUnlocked)
+  );
   const ownedList = respectState.owned[_respectShopTab] || [];
   const slot = _RESPECT_ACTIVE_SLOT_MAP[_respectShopTab];
   const isMulti = _RESPECT_MULTI_SLOT_CATS.indexOf(_respectShopTab) !== -1;
@@ -50986,8 +51950,23 @@ function renderRespectShop() {
     const active  = isMulti
       ? respectState.active[slot].indexOf(item.applyId) !== -1
       : respectState.active[slot] === item.applyId;
+    // Stage 4 QOL: trainingRooms is unlock-only. Re-label "EQUIP/EQUIPPED"
+    // as "UNLOCKED" and route the button to open the Training menu so
+    // the player can jump straight into the unlocked room.
+    const isTraining = (_respectShopTab === 'trainingRooms');
+    // Stage 4 QOL: vehicles tab is unlock-only too. Owned = "UNLOCKED",
+    // and the button reads "PICK AT SELECT" (informational — actual
+    // vehicle selection happens on the character-select screen).
+    const isVehicles = (_respectShopTab === 'vehicles');
     let btnHtml;
-    if (active) {
+    if (isTraining && owned) {
+      btnHtml = '<button class="secondary respect-training-enter-btn" data-rid="' + _respectEscape(item.id) + '" ' +
+                'style="background:#2a3d2e; color:#06d6a0; border-color:#06d6a0; min-width:80px;">ENTER</button>';
+    } else if (isVehicles && owned) {
+      btnHtml = '<button class="secondary" disabled ' +
+                'style="background:#2a3d2e; color:#06d6a0; border-color:#06d6a0; ' +
+                'min-width:80px; opacity:0.95; cursor:default;">UNLOCKED</button>';
+    } else if (active) {
       btnHtml = '<button class="secondary respect-equip-btn" data-rid="' + _respectEscape(item.id) + '" ' +
                 'style="background:#2a3d2e; color:#06d6a0; border-color:#06d6a0; min-width:80px;">' +
                 (isMulti ? 'EQUIPPED' : 'ACTIVE') + '</button>';
@@ -51002,10 +51981,13 @@ function renderRespectShop() {
       btnHtml = '<button class="secondary" disabled style="opacity:0.55; cursor:not-allowed; min-width:80px;">' +
                 'NEED ' + need + '</button>';
     }
-    const statusTag = active ? '<span style="color:#06d6a0; font-weight:bold;">' +
+    const statusTag = (isTraining || isVehicles)
+      ? (owned ? '<span style="color:#06d6a0; font-weight:bold;">[UNLOCKED]</span>'
+               : '<span style="color:#a8b0c4;">[LOCKED]</span>')
+      : (active ? '<span style="color:#06d6a0; font-weight:bold;">' +
                                 (isMulti ? '[EQUIPPED]' : '[ACTIVE]') + '</span>'
-                  : owned   ? '<span style="color:#ffd166;">[OWNED]</span>'
-                  :           '<span style="color:#a8b0c4;">[LOCKED]</span>';
+                : owned   ? '<span style="color:#ffd166;">[OWNED]</span>'
+                          : '<span style="color:#a8b0c4;">[LOCKED]</span>');
     const costTag = (item.cost > 0) ? '<span style="color:#ffd166;">' + item.cost + ' Respect</span>'
                                     : '<span style="color:#a8b0c4;">Free</span>';
     html +=
@@ -51056,6 +52038,21 @@ function renderRespectShop() {
       } else {
         _respectShopShowFeedback('EQUIP FAILED', '#ef476f');
       }
+    });
+  });
+  // Stage 4 QOL: ENTER button on unlocked training rooms — closes the
+  // shop and opens the training menu, then auto-launches the requested
+  // room's mini-game so the player jumps straight in.
+  listEl.querySelectorAll('.respect-training-enter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rid = btn.getAttribute('data-rid');
+      const item = RESPECT_SHOP_ITEMS.find(it => it.id === rid);
+      if (!item) return;
+      // Stage 4 QOL: the standalone Garage / Training screen is gone —
+      // Training rooms live entirely under the RESPECT SHOP > TRAINING
+      // tab now. Close the shop and launch the requested room directly.
+      closeRespectShop();
+      if (typeof startTrainingMinigame === 'function') startTrainingMinigame(item.applyId);
     });
   });
 }
@@ -51214,6 +52211,20 @@ function enterGarageAtShiftStart() {
   // (HUD itself is still useful for ROLE/SCORE/etc; just suppress siren
   // since the rig is parked in a bay and not running.)
   if (typeof stopSiren === 'function') stopSiren();
+  // Stage 4 QOL: shift hasn't really started until the rig leaves the
+  // bay. Reset the dispatch panel to a clear pre-shift label so the
+  // "First call in 3s" text from startShift doesn't keep counting in
+  // the player's peripheral vision while they shop / wander the bay.
+  try {
+    const dlbl = document.getElementById('dispatch-loc');
+    if (dlbl) dlbl.textContent = 'Press E on your rig to roll out';
+    const dtit = document.getElementById('dispatch-title');
+    if (dtit) dtit.textContent = 'Pre-shift — Station Garage';
+  } catch (_eDL) {}
+  // Suspend the cooldown timer entirely while in the garage. The next-
+  // call countdown should start the moment the rig leaves the bay, not
+  // while the player is still inside checking decor.
+  game.cooldown = 0;
   // Show banner so the player knows what they're looking at.
   if (typeof showBanner === 'function') {
     showBanner('\u2691 GARAGE \u2014 walk to your rig and press E to start');
@@ -51233,6 +52244,16 @@ function exitGarageInRig() {
     game._interior = null;
     hideActionPrompt();
     hideSceneSafety();
+    // Stage 4 QOL: restart the first-call countdown the moment the rig
+    // leaves the garage (cooldown was zeroed on entry so it didn't burn
+    // while the player browsed). 3-second grace before the first call.
+    game.cooldown = 3;
+    try {
+      const dlbl = document.getElementById('dispatch-loc');
+      if (dlbl) dlbl.textContent = 'Next call in 3s';
+      const dtit = document.getElementById('dispatch-title');
+      if (dtit) dtit.textContent = 'Patrolling \u2014 explore the city';
+    } catch (_eDL) {}
     // Resume siren if the player had it on (won't on shift start, but
     // covers re-entry edge cases cleanly).
     if (game.lightsSirens && typeof startSiren === 'function' && !sirenNodes) {
@@ -51255,30 +52276,53 @@ function renderInBuildingGarage() {
   const ctx = canvas.getContext('2d');
   const offX = (viewW - INTERIOR_W) / 2;
   const offY = (viewH - INTERIOR_H) / 2;
-  // Backdrop
+  // Backdrop — a dim outside-the-station band so the bright interior pops.
   ctx.fillStyle = '#0a0a14';
   ctx.fillRect(0, 0, viewW, viewH);
-  // ----- Floor: concrete with parking-stall paint -----
-  const floor    = '#5a554c';
-  const floorAlt = '#4a463e';
+  // ----- Floor: BRIGHTER painted concrete with parking-stall paint -----
+  // Lighter palette than before so the room reads as a working, lit
+  // station bay rather than a shadowed corner. Two-tone checker keeps
+  // the linoleum-look.
+  const floor    = '#8a8478';   // was #5a554c
+  const floorAlt = '#7a746a';   // was #4a463e
   const tileSz = 22;
   for (let ty = 0; ty < INTERIOR_H; ty += tileSz) {
     for (let tx = 0; tx < INTERIOR_W; tx += tileSz) {
       const checker = ((tx / tileSz) + (ty / tileSz)) % 2;
       ctx.fillStyle = checker === 0 ? floor : floorAlt;
       ctx.fillRect(offX + tx, offY + ty, tileSz, tileSz);
+      // Subtle grout line at each tile edge for a more "real" station feel.
+      ctx.fillStyle = 'rgba(40,38,32,0.18)';
+      ctx.fillRect(offX + tx, offY + ty, tileSz, 1);
+      ctx.fillRect(offX + tx, offY + ty, 1, tileSz);
     }
   }
+  // ----- Fluorescent ceiling-light "casts" — wide bright bands that
+  // brighten the floor in stripes (sells the overhead lighting). -----
+  ctx.fillStyle = 'rgba(255, 250, 220, 0.08)';
+  for (const lx of [120, 360, 600]) {
+    ctx.fillRect(offX + lx - 50, offY + INTERIOR_PAD,
+                 100, INTERIOR_H - 2 * INTERIOR_PAD);
+  }
+  // Soft puddle highlight under each light, simulating reflected glow.
+  for (const lx of [120, 360, 600]) {
+    const grad = ctx.createRadialGradient(
+      offX + lx, offY + INTERIOR_H / 2, 0,
+      offX + lx, offY + INTERIOR_H / 2, 130);
+    grad.addColorStop(0, 'rgba(255, 248, 210, 0.18)');
+    grad.addColorStop(1, 'rgba(255, 248, 210, 0.0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(offX + lx - 130, offY + INTERIOR_PAD,
+                 260, INTERIOR_H - 2 * INTERIOR_PAD);
+  }
   // Oil spots for atmosphere.
-  ctx.fillStyle = 'rgba(20,15,10,0.55)';
+  ctx.fillStyle = 'rgba(30,20,10,0.45)';
   for (const spot of [[260,420,14,7],[600,400,12,6],[470,420,11,5]]) {
     ctx.beginPath();
     ctx.ellipse(offX + spot[0], offY + spot[1], spot[2], spot[3], 0, 0, Math.PI * 2);
     ctx.fill();
   }
   // Parking-stall paint lines around the rig bay (high-vis yellow).
-  // Open on the south side (the rig pulls forward out of the bay through
-  // the garage door); paint lines on left, right, and back only.
   ctx.strokeStyle = '#fde047';
   ctx.lineWidth = 3;
   const bay = GARAGE_RIG_BAY;
@@ -51290,32 +52334,104 @@ function renderInBuildingGarage() {
   ctx.moveTo(offX + bay.x - 80, offY + bay.y - 60);
   ctx.lineTo(offX + bay.x + 80, offY + bay.y - 60);
   ctx.stroke();
+  // Hatched "no-walk zone" diagonals just outside the bay stripes for
+  // extra station-grade detail.
+  ctx.strokeStyle = 'rgba(253, 224, 71, 0.35)';
+  ctx.lineWidth = 1.5;
+  for (let dy = 0; dy < 130; dy += 14) {
+    ctx.beginPath();
+    ctx.moveTo(offX + bay.x - 92, offY + bay.y - 60 + dy);
+    ctx.lineTo(offX + bay.x - 82, offY + bay.y - 60 + dy + 10);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(offX + bay.x + 82, offY + bay.y - 60 + dy);
+    ctx.lineTo(offX + bay.x + 92, offY + bay.y - 60 + dy + 10);
+    ctx.stroke();
+  }
   // "BAY 1" stenciled paint behind the rig.
-  ctx.fillStyle = 'rgba(253,224,71,0.55)';
+  ctx.fillStyle = 'rgba(253,224,71,0.65)';
   ctx.font = 'bold 18px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('BAY 1', offX + bay.x, offY + bay.y - 45);
-  // ----- Walls -----
-  const wallColor = '#3a3a40';
-  const wallTop   = '#5a5a62';
-  ctx.fillStyle = wallColor;
+  // ----- WALLS: brighter painted-block look with baseboard trim -----
+  // Cinder block top half, painted base half, dark baseboard kick-line.
+  const wallTop    = '#a0a8b2';  // brighter, cooler upper wall
+  const wallBase   = '#7a8290';  // mid tone
+  const wallShadow = '#3a3e48';
+  // Top wall (back of station).
+  ctx.fillStyle = wallTop;
   ctx.fillRect(offX, offY, INTERIOR_W, INTERIOR_PAD);
+  // Cinder-block grout lines on the top wall.
+  ctx.strokeStyle = 'rgba(40, 44, 56, 0.55)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(offX, offY + INTERIOR_PAD / 2);
+  ctx.lineTo(offX + INTERIOR_W, offY + INTERIOR_PAD / 2);
+  ctx.stroke();
+  for (let bx = 0; bx < INTERIOR_W; bx += 36) {
+    ctx.beginPath();
+    ctx.moveTo(offX + bx, offY);
+    ctx.lineTo(offX + bx, offY + INTERIOR_PAD / 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(offX + bx + 18, offY + INTERIOR_PAD / 2);
+    ctx.lineTo(offX + bx + 18, offY + INTERIOR_PAD);
+    ctx.stroke();
+  }
+  // Bottom wall behind the garage door.
+  ctx.fillStyle = wallTop;
   ctx.fillRect(offX, offY + INTERIOR_H - INTERIOR_PAD, INTERIOR_W, INTERIOR_PAD);
+  // Side walls.
+  ctx.fillStyle = wallTop;
   ctx.fillRect(offX, offY, INTERIOR_PAD, INTERIOR_H);
   ctx.fillRect(offX + INTERIOR_W - INTERIOR_PAD, offY, INTERIOR_PAD, INTERIOR_H);
-  ctx.fillStyle = wallTop;
-  ctx.fillRect(offX + INTERIOR_PAD, offY + INTERIOR_PAD - 3, INTERIOR_W - 2*INTERIOR_PAD, 3);
-  // Corrugated metal vertical strips on the top wall.
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
-  for (let xx = INTERIOR_PAD + 6; xx < INTERIOR_W - INTERIOR_PAD - 6; xx += 8) {
-    ctx.fillRect(offX + xx, offY + 4, 1, INTERIOR_PAD - 6);
+  // Baseboard kick-line where wall meets floor — dark band the full
+  // length of all four walls. Sells the "real room" depth.
+  ctx.fillStyle = wallShadow;
+  ctx.fillRect(offX + INTERIOR_PAD, offY + INTERIOR_PAD - 4, INTERIOR_W - 2*INTERIOR_PAD, 4);
+  ctx.fillRect(offX + INTERIOR_PAD - 0, offY + INTERIOR_H - INTERIOR_PAD - 0,
+               INTERIOR_W - 2*INTERIOR_PAD, 4);
+  ctx.fillRect(offX + INTERIOR_PAD - 4, offY, 4, INTERIOR_H);
+  ctx.fillRect(offX + INTERIOR_W - INTERIOR_PAD, offY, 4, INTERIOR_H);
+  // ----- Fluorescent ceiling-light fixtures along the top wall ------
+  for (const lx of [120, 360, 600]) {
+    // Mounting plate
+    ctx.fillStyle = '#3a3e48';
+    ctx.fillRect(offX + lx - 28, offY + INTERIOR_PAD - 2, 56, 4);
+    // Tube
+    ctx.fillStyle = '#fffdf2';
+    ctx.fillRect(offX + lx - 26, offY + INTERIOR_PAD + 1, 52, 3);
+    // Tube glow
+    ctx.fillStyle = 'rgba(255, 248, 210, 0.55)';
+    ctx.fillRect(offX + lx - 26, offY + INTERIOR_PAD + 4, 52, 2);
   }
+  // ----- WALL POSTERS / SIGNAGE (top wall, between decor cells) -----
+  // A safety poster, an EMS-protocols poster, and a calendar to add the
+  // "station office" feel without competing with the decor shelf.
+  const _drawPoster = (px, py, w, h, headerColor, headerText, bodyColor) => {
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(offX + px, offY + py, w, h);
+    ctx.fillStyle = headerColor;
+    ctx.fillRect(offX + px, offY + py, w, 6);
+    ctx.fillStyle = '#1a1a1f';
+    ctx.font = 'bold 5px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(headerText, offX + px + w/2, offY + py + 3);
+    // Border
+    ctx.strokeStyle = '#1a1a1f';
+    ctx.lineWidth = 0.8;
+    ctx.strokeRect(offX + px, offY + py, w, h);
+  };
+  _drawPoster(36, INTERIOR_PAD + 8, 64, 36, '#c1121f', 'SAFETY', '#f5f1e0');
+  _drawPoster(INTERIOR_W - 100, INTERIOR_PAD + 8, 64, 36, '#1d4ed8', 'PROTOCOLS', '#f5f1e0');
   // ----- Garage door (south wall, behind the rig) -----
-  ctx.fillStyle = '#2a2a30';
+  // Brighter, with track rails on both sides.
+  ctx.fillStyle = '#4a4f5a';
   ctx.fillRect(offX + bay.x - 90, offY + INTERIOR_H - INTERIOR_PAD,
                180, INTERIOR_PAD);
-  ctx.strokeStyle = '#1a1a1f';
+  ctx.strokeStyle = '#2a2e36';
   ctx.lineWidth = 1;
   for (let dy = 4; dy < INTERIOR_PAD - 2; dy += 5) {
     ctx.beginPath();
@@ -51323,8 +52439,16 @@ function renderInBuildingGarage() {
     ctx.lineTo(offX + bay.x + 90, offY + INTERIOR_H - INTERIOR_PAD + dy);
     ctx.stroke();
   }
+  // Door track rails
+  ctx.fillStyle = '#2a2e36';
+  ctx.fillRect(offX + bay.x - 92, offY + INTERIOR_H - INTERIOR_PAD, 2, INTERIOR_PAD);
+  ctx.fillRect(offX + bay.x + 90, offY + INTERIOR_H - INTERIOR_PAD, 2, INTERIOR_PAD);
   // ----- Trophy shelf (top wall, decor display) -----
   _renderGarageTrophyShelf(ctx, offX, offY);
+  // ----- LOCKERS along the left wall (visual containment) -----
+  _renderGarageLockers(ctx, offX + INTERIOR_PAD + 4, offY + INTERIOR_PAD + 140, 4);
+  // ----- BULLETIN BOARD along the right wall -----
+  _renderGarageBulletin(ctx, offX + INTERIOR_W - INTERIOR_PAD - 60, offY + INTERIOR_PAD + 150);
   // ----- Workbench (cosmetic filler in the middle of the floor) -----
   _renderGarageWorkbench(ctx, offX + GARAGE_WORKBENCH.x, offY + GARAGE_WORKBENCH.y);
   // ----- Arcade cabinet (lower-left, away from shelf) -----
@@ -51332,17 +52456,95 @@ function renderInBuildingGarage() {
   // ----- The rig in the bay -----
   _renderGarageRig(ctx, offX + bay.x, offY + bay.y);
   // ----- "STATION GARAGE" sign over the door -----
-  ctx.fillStyle = '#ffd166';
-  ctx.font = 'bold 11px "Courier New", monospace';
+  // Stage 4 QOL: previous dark-text-on-cinderblock was illegible.
+  // Paint a dark plaque first, then bright gold lettering on top so
+  // the header reads at a glance regardless of wall color.
+  const _hdrTxt = '\u2691  STATION GARAGE  \u2691';
+  ctx.font = 'bold 12px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('⚑  STATION GARAGE  ⚑',
-               offX + INTERIOR_W / 2, offY + INTERIOR_PAD / 2);
+  const _hdrMetrics = ctx.measureText(_hdrTxt);
+  const _hdrPlateW = Math.max(220, _hdrMetrics.width + 28);
+  ctx.fillStyle = '#1a1a1f';
+  ctx.fillRect(offX + INTERIOR_W / 2 - _hdrPlateW / 2, offY + 3,
+               _hdrPlateW, INTERIOR_PAD - 6);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(offX + INTERIOR_W / 2 - _hdrPlateW / 2, offY + 3,
+                 _hdrPlateW, INTERIOR_PAD - 6);
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillText(_hdrTxt, offX + INTERIOR_W / 2, offY + INTERIOR_PAD / 2);
   // ----- Medic sprite (the player) -----
   if (typeof _renderInteriorMedic === 'function') {
     _renderInteriorMedic(offX + interior.px, offY + interior.py,
                          interior.heading, interior.walkBob);
   }
+}
+// ----- LEFT-WALL LOCKERS (cosmetic, not blocking, well outside the
+// player's normal walk path so the medic doesn't run into them). -----
+function _renderGarageLockers(ctx, cx, cy, count) {
+  const lockerW = 26;
+  const lockerH = 60;
+  for (let i = 0; i < count; i++) {
+    const x = cx + i * (lockerW - 2);
+    // Body
+    ctx.fillStyle = '#5f6772';
+    ctx.fillRect(x, cy, lockerW, lockerH);
+    // Door inset
+    ctx.fillStyle = '#4a525c';
+    ctx.fillRect(x + 2, cy + 2, lockerW - 4, lockerH - 4);
+    // Vent slats (top)
+    ctx.fillStyle = '#2a2e36';
+    for (let v = 0; v < 4; v++) {
+      ctx.fillRect(x + 6, cy + 6 + v * 2.5, lockerW - 12, 1);
+    }
+    // Number plate
+    ctx.fillStyle = '#f5f1e0';
+    ctx.fillRect(x + 8, cy + 22, lockerW - 16, 8);
+    ctx.fillStyle = '#1a1a1f';
+    ctx.font = 'bold 6px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(i + 1), x + lockerW / 2, cy + 26);
+    // Latch / handle
+    ctx.fillStyle = '#1a1a1f';
+    ctx.fillRect(x + 4, cy + lockerH - 14, 3, 6);
+  }
+}
+// ----- RIGHT-WALL BULLETIN BOARD -----
+function _renderGarageBulletin(ctx, cx, cy) {
+  const w = 50, h = 64;
+  // Cork backing
+  ctx.fillStyle = '#a87842';
+  ctx.fillRect(cx, cy, w, h);
+  // Wood frame
+  ctx.strokeStyle = '#3a2210';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(cx, cy, w, h);
+  // A few pinned notes
+  ctx.fillStyle = '#f5f1e0';
+  ctx.fillRect(cx + 4, cy + 5, 18, 14);
+  ctx.fillRect(cx + 26, cy + 8, 18, 12);
+  ctx.fillRect(cx + 10, cy + 26, 22, 14);
+  ctx.fillRect(cx + 6, cy + 44, 16, 14);
+  // Note text suggestions (tiny lines)
+  ctx.strokeStyle = '#3a3a40';
+  ctx.lineWidth = 0.5;
+  [[6,9],[6,12],[6,15], [28,12],[28,15], [12,30],[12,33],[12,36], [8,48],[8,51]].forEach(p => {
+    ctx.beginPath();
+    ctx.moveTo(cx + p[0], cy + p[1]);
+    ctx.lineTo(cx + p[0] + 14, cy + p[1]);
+    ctx.stroke();
+  });
+  // Pins
+  ctx.fillStyle = '#c1121f';
+  ctx.beginPath(); ctx.arc(cx + 6,  cy + 7,  1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1d4ed8';
+  ctx.beginPath(); ctx.arc(cx + 28, cy + 10, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath(); ctx.arc(cx + 12, cy + 28, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#10b981';
+  ctx.beginPath(); ctx.arc(cx + 8,  cy + 46, 1.2, 0, Math.PI * 2); ctx.fill();
 }
 // Tiny ticker so the arcade screen pulses.
 const _garageTickStart = performance.now();
@@ -51475,15 +52677,33 @@ function _renderGarageRig(ctx, cx, cy) {
   if (type === 'ambo')   drawAmbo(ctx, true, performance.now() / 1000, themeColors);
   else if (type === 'squad')  drawSquad(ctx, true, performance.now() / 1000, themeColors);
   else if (type === 'rescue') drawRescue(ctx, true, performance.now() / 1000, themeColors);
+  else if (type === 'moto')   drawMoto(ctx, true, performance.now() / 1000, themeColors);
   ctx.restore();
   // Unit-number callsign painted in front of the bay.
-  ctx.fillStyle = '#fde047';
+  // Stage 4 QOL: previous yellow text on the bright bay floor clashed
+  // (user feedback). Paint a dark plate behind the callsign and use
+  // crisp white text with a thin gold border so it reads at a glance
+  // regardless of the floor color.
+  let unit = 'Unit 12';
+  try { unit = getActiveUnitNumber(); } catch (_eU) {}
+  const _unitTxt = unit.toUpperCase();
   ctx.font = 'bold 10px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  let unit = 'Unit 12';
-  try { unit = getActiveUnitNumber(); } catch (_eU) {}
-  ctx.fillText(unit.toUpperCase(), cx, cy + 55);
+  const _unitMetrics = ctx.measureText(_unitTxt);
+  const _plateW = Math.max(48, _unitMetrics.width + 14);
+  const _plateH = 14;
+  const _plateY = cy + 55 - _plateH / 2;
+  // Dark plate background
+  ctx.fillStyle = '#1a1a1f';
+  ctx.fillRect(cx - _plateW / 2, _plateY, _plateW, _plateH);
+  // Gold border
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - _plateW / 2, _plateY, _plateW, _plateH);
+  // White callsign text
+  ctx.fillStyle = '#fffdf2';
+  ctx.fillText(_unitTxt, cx, cy + 55);
 }
 function _renderGarageTrophyShelf(ctx, offX, offY) {
   // Stage 4 QOL: wood trophy shelf along the top wall. Decor items are
@@ -52050,6 +53270,964 @@ function _drawFishTankSprite(ctx, cx, cy) {
 // END GARAGE INTERIOR
 // =====================================================================
 
+// =====================================================================
+// STAGE 4 — TRAINING ROOMS (EMT mini-games)
+// =====================================================================
+// Five EMT-level practice rooms. All share one multiple-choice runner
+// to keep the surface area small; differences are in the question pool
+// per room. No live shift state is touched. Unlocks live in respectState
+// (category 'trainingRooms'); per-room stats live in a separate
+// localStorage key so the schema is independent.
+//
+// Scope guard per brief: NO AEMT content. EMT-level only.
+
+const _TRAINING_STATS_KEY = 'emsq_training_stats_v1';
+
+const TRAINING_ROOMS = [
+  { id:'airway_lab',           name:'Airway Lab',            cost:150, type:'airway',
+    description:'Practice EMT airway decisions, positioning, suction, adjuncts, oxygen, and BVM basics.' },
+  { id:'vitals_lab',           name:'Vitals Lab',            cost:150, type:'vitals',
+    description:'Practice interpreting EMT vital signs and deciding what they suggest.' },
+  { id:'radio_report_room',    name:'Radio Report Room',     cost:200, type:'radioReport',
+    description:'Practice concise EMS radio reports and ALS/ED handoffs.' },
+  { id:'refusal_practice_room',name:'Refusal Practice Room', cost:250, type:'refusal',
+    description:'Practice safe EMT refusal conversations: capacity, risks, teach-back, return precautions.' },
+  { id:'trauma_triage_room',   name:'Trauma Triage Room',    cost:300, type:'triage',
+    description:'Practice START-style MCI triage and trauma priority decisions at the EMT level.' },
+  // Stage 4 QOL: AEMT-only rooms — hidden in the shop AND in the
+  // training menu unless _aemtSessionUnlocked is true (set by the AEMT
+  // cheat code at the title screen for THIS session only). Costs are
+  // higher than EMT rooms to match the higher scope/value.
+  { id:'aemt_airway_lab',      name:'AEMT Airway Lab',       cost:350, type:'aemtAirway',  aemtOnly:true,
+    description:'Practice AEMT advanced airway decisions \u2014 supraglottic devices, capnography, escalation.' },
+  { id:'aemt_meds_lab',        name:'AEMT Medications Lab',  cost:400, type:'aemtMeds',    aemtOnly:true,
+    description:'Practice AEMT-scope medication recognition \u2014 epi, glucose, naloxone, Solu-Medrol, Tylenol, more.' },
+  { id:'aemt_interventions_lab', name:'AEMT Interventions Lab', cost:400, type:'aemtInterventions', aemtOnly:true,
+    description:'Practice AEMT interventions \u2014 CPAP vs BiPAP, IV/IO indications, ALS escalation criteria.' }
+];
+
+const TRAINING_QUESTIONS = {
+  airway_lab: [
+    {
+      prompt: 'Unresponsive adult, snoring respirations, no trauma suspected, breathing slow but shallow.',
+      vitals: 'RR 8 shallow \u00b7 SpO2 86% \u00b7 HR 110',
+      options: [
+        'Open the airway with a head-tilt/chin-lift and prepare to ventilate with BVM',
+        'Sit the patient upright and ask OPQRST',
+        'Give oral glucose and reassess in 2 minutes',
+        'Wait for a pulse-ox trend before intervening'
+      ],
+      correct: 0,
+      explanation: 'Snoring respirations = upper airway obstruction by the tongue. Open the airway immediately. RR 8 with low SpO2 is inadequate ventilation \u2014 BVM with supplemental oxygen.'
+    },
+    {
+      prompt: 'Intoxicated 24 y/o vomiting after a fall (no head injury), GCS 13, gurgling respirations.',
+      vitals: 'RR 20 \u00b7 SpO2 94% \u00b7 HR 96',
+      options: [
+        'Insert an OPA and place at high-flow NRB',
+        'Suction the airway, then position in the recovery (lateral) position',
+        'Begin BVM ventilation regardless of effort',
+        'Give oral glucose immediately'
+      ],
+      correct: 1,
+      explanation: 'Gurgling = fluid in the airway \u2192 suction first. Adequate spontaneous breathing means recovery position protects the airway. OPA would trigger gag/vomiting with intact reflex.'
+    },
+    {
+      prompt: 'Conscious 70 y/o with severe shortness of breath, tripod position, audible wheezing, anxious but answering questions.',
+      vitals: 'RR 28 labored \u00b7 SpO2 88% \u00b7 HR 116',
+      options: [
+        'Lay supine and start BVM ventilation',
+        'Insert an OPA to protect the airway',
+        'Place the patient on high-flow oxygen via NRB and assist with their prescribed inhaler if available per protocol',
+        'Hold oxygen until SpO2 drops below 80%'
+      ],
+      correct: 2,
+      explanation: 'Patient is breathing adequately but hypoxic and in distress. NRB at high flow + assist with the patient\u2019s own inhaler (EMT-level) per local protocol. BVM is reserved for inadequate breathing.'
+    },
+    {
+      prompt: 'Adult found unresponsive with no gag reflex. You need an airway adjunct.',
+      vitals: 'RR 6 \u00b7 SpO2 84%',
+      options: [
+        'NPA in either nostril; no contraindication noted',
+        'OPA sized from corner of mouth to earlobe',
+        'OPA sized from corner of mouth to angle of jaw',
+        'Both an OPA and NPA at the same time before ventilating'
+      ],
+      correct: 2,
+      explanation: 'OPA is sized corner of mouth to angle of jaw (or tip of earlobe). No gag reflex = OPA tolerated. Always ventilate after placement \u2014 adjunct alone doesn\u2019t fix RR 6.'
+    },
+    {
+      prompt: 'Trauma patient with significant facial/head injury and possible basilar skull fracture. Needs airway support.',
+      vitals: 'RR 7 \u00b7 GCS 6',
+      options: [
+        'Place an NPA \u2014 easier than an OPA in trauma',
+        'Avoid NPA due to suspected basilar skull fracture; use jaw-thrust and BVM',
+        'Insert an OPA and ventilate with high pressure',
+        'Hold airway support until ALS arrives'
+      ],
+      correct: 1,
+      explanation: 'Suspected basilar skull fracture is a relative contraindication to NPA (risk of intracranial passage). Jaw-thrust (spine-friendly), BVM, suction as needed; OPA if no gag.'
+    },
+    {
+      prompt: 'Adult drowning victim, pulled from water, breathing on own but slow and shallow with hypoxia after rescue.',
+      vitals: 'RR 9 \u00b7 SpO2 82% \u00b7 HR 102',
+      options: [
+        'Recovery position and watch the SpO2',
+        'NRB only \u2014 they\u2019re still breathing',
+        'Assist ventilations with BVM and supplemental oxygen, suction any vomit',
+        'Wait for ALS to make the airway call'
+      ],
+      correct: 2,
+      explanation: 'RR < 10 with hypoxia = inadequate ventilation. Assist with BVM at age-appropriate rate. Have suction ready \u2014 vomiting is common after near-drowning.'
+    }
+  ],
+  vitals_lab: [
+    {
+      prompt: '20 y/o after syncope. Skin pale and cool. Awake but lightheaded.',
+      vitals: 'BP 86/54 \u00b7 HR 132 \u00b7 RR 24 \u00b7 SpO2 97%',
+      options: [
+        'Shock / perfusion problem \u2014 rapid transport, request ALS',
+        'Stable anxiety \u2014 treat and release',
+        'Normal post-syncopal vitals \u2014 no concern',
+        'Primary airway obstruction \u2014 insert OPA immediately'
+      ],
+      correct: 0,
+      explanation: 'Pale/cool + tachycardia + hypotension after syncope = shock physiology. SpO2 can be normal early. Position for perfusion, oxygen, rapid transport, ALS.'
+    },
+    {
+      prompt: '40 y/o opioid use history, found drowsy in alley. Pinpoint pupils.',
+      vitals: 'RR 6 shallow \u00b7 SpO2 79% \u00b7 HR 56',
+      options: [
+        'Hyperventilation pattern \u2014 coach slow breathing',
+        'Opioid overdose \u2014 open airway, BVM ventilation, naloxone per local EMT protocol',
+        'Hypoglycemia \u2014 give oral glucose',
+        'Heat exhaustion \u2014 cool and rehydrate'
+      ],
+      correct: 1,
+      explanation: 'Classic opioid OD triad: depressed breathing, pinpoint pupils, decreased mentation. EMT priority is ventilation; many systems allow EMT-administered naloxone \u2014 follow local protocol.'
+    },
+    {
+      prompt: '65 y/o with known diabetes, confused and diaphoretic, last ate "hours ago".',
+      vitals: 'BP 138/82 \u00b7 HR 104 \u00b7 RR 18 \u00b7 BGL 48 mg/dL',
+      options: [
+        'Stroke pathway \u2014 Cincinnati exam and rapid transport only',
+        'Sepsis pathway \u2014 high-flow oxygen and rapid transport',
+        'Hypoglycemia \u2014 give oral glucose if awake enough to swallow and protect airway; reassess',
+        'No intervention \u2014 BP and HR are normal'
+      ],
+      correct: 2,
+      explanation: 'BGL < 60 with altered mentation + diabetic history = hypoglycemia. EMT scope includes oral glucose IF patient can protect their airway. Reassess after.'
+    },
+    {
+      prompt: '70 y/o nursing home patient, febrile and confused for 2 days, skin warm and pale.',
+      vitals: 'BP 92/60 \u00b7 HR 116 \u00b7 RR 22 \u00b7 Temp 38.9\u00b0C \u00b7 SpO2 93%',
+      options: [
+        'Heat stroke \u2014 aggressive cooling on scene',
+        'Likely sepsis \u2014 oxygen, position for perfusion, rapid transport, alert receiving facility',
+        'Atrial fibrillation \u2014 give aspirin',
+        'Anxiety \u2014 sit them up and reassure'
+      ],
+      correct: 1,
+      explanation: 'Fever + AMS + hypotension + tachycardia = sepsis until proven otherwise. EMT priorities: oxygen if hypoxic, supine/position for perfusion, expedited transport, early notification.'
+    },
+    {
+      prompt: 'After 5 minutes of oxygen + bleeding control on a trauma patient, you recheck vitals.',
+      vitals: 'BP 88 \u2192 102 syst \u00b7 HR 132 \u2192 108 \u00b7 SpO2 89 \u2192 96%',
+      options: [
+        'Vitals are worsening \u2014 patient is decompensating',
+        'Vitals are unchanged \u2014 no useful information',
+        'Vitals are trending better \u2014 interventions are working; continue and reassess en route',
+        'Stop interventions \u2014 patient is now stable enough to refuse'
+      ],
+      correct: 2,
+      explanation: 'Trends matter more than single numbers. Improving BP, lower HR, and rising SpO2 = your interventions are helping. Keep going, document, reassess.'
+    },
+    {
+      prompt: '8 y/o with respiratory distress. Use age-appropriate ranges.',
+      vitals: 'RR 44 retractions \u00b7 HR 152 \u00b7 SpO2 91%',
+      options: [
+        'Normal pediatric vitals \u2014 no action needed',
+        'Tachypnea with retractions + hypoxia = respiratory distress; oxygen, position of comfort, expedited transport',
+        'Cardiac arrest imminent \u2014 start CPR',
+        'Suspect overdose \u2014 give naloxone'
+      ],
+      correct: 1,
+      explanation: 'Normal RR for 8 y/o is roughly 18\u201330. RR 44 with retractions is significant distress. Oxygen, position of comfort, no agitation, transport. Watch for fatigue \u2192 failure.'
+    }
+  ],
+  radio_report_room: [
+    {
+      prompt: 'Transporting a 58 y/o male with chest pressure, pale/diaphoretic, BP 150/90, HR 104, SpO2 96%, aspirin given, ALS requested. Pick the best hospital notification.',
+      options: [
+        '"Hospital, we have chest pain, see you soon."',
+        '"Hospital, inbound with 58 y/o male, chest pressure, pale/diaphoretic, vitals stable, aspirin given, ALS requested, ETA 8."',
+        '"Hospital, patient is probably having a heart attack, prepare cath lab now."',
+        '"Hospital, 58 y/o male refusing care, show us clear."'
+      ],
+      correct: 1,
+      explanation: 'Best report = age/sex, chief complaint, key findings, treatments given, request, ETA. Don\u2019t over-call (diagnosis) or under-call (no specifics). B is concise and complete.'
+    },
+    {
+      prompt: 'You are en route to a refusal patient with concerning vitals and want to consult medical command. Best phrasing?',
+      options: [
+        '"Command, we have a refusal, what do you think?"',
+        '"Command, 72 y/o syncope, BP 92/60 HR 118, declining transport, requesting consult to evaluate capacity and refusal."',
+        '"Command, patient is refusing because they\u2019re drunk, please advise."',
+        '"Command, we don\u2019t want to transport, we\u2019re clearing the call."'
+      ],
+      correct: 1,
+      explanation: 'Command consults need: who/what/why and what you\u2019re asking. Frame the clinical concern, vitals, and the specific request. Avoid stigmatizing language.'
+    },
+    {
+      prompt: 'Handing off to ALS at the scene. Most useful 30-second handoff?',
+      options: [
+        '"He\u2019s sick, you\u2019ve got him."',
+        '"45 y/o male, chest pressure 20 minutes, BP 168/94 HR 96 RR 18 SpO2 97%, 324 mg aspirin given, no nitro per his meds list, denies allergy. Vitals trending stable."',
+        '"He had chest pain a while back, he\u2019s fine now."',
+        '"He doesn\u2019t want to go, we tried."'
+      ],
+      correct: 1,
+      explanation: 'Transfer of care is age/sex, complaint with timing, vitals, treatments, pertinent positives/negatives. Brief, structured, no editorial. Option B nails it.'
+    },
+    {
+      prompt: 'Arriving on scene of an MCI with multiple patients. Best first radio to dispatch?',
+      options: [
+        '"Dispatch, on scene, we\u2019ll let you know."',
+        '"Dispatch, this is Medic 12, on scene of a multi-patient incident, approximately 6 patients, requesting 2 additional ALS and a supervisor, staging on Forbes Ave."',
+        '"Dispatch, send everyone."',
+        '"Dispatch, no patients found, clearing."'
+      ],
+      correct: 1,
+      explanation: 'MCI report = identify unit, scene type, approximate patient count, resources needed, staging location. Gets the right help moving without delay.'
+    },
+    {
+      prompt: 'Dispatch is asking for your status. You just put a patient on the stretcher and are about to start moving.',
+      options: [
+        '"Dispatch, busy."',
+        '"Dispatch, Medic 12 \u2014 one patient packaged, departing scene for Allegheny General, ETA 10."',
+        '"Dispatch, we\u2019re fine, do not bother us."',
+        '"Dispatch, the patient is dying, do not interrupt."'
+      ],
+      correct: 1,
+      explanation: 'Status updates should communicate unit, action, destination, ETA. "Busy" or "do not bother" leaves dispatch blind. Concise and useful is the standard.'
+    }
+  ],
+  refusal_practice_room: [
+    {
+      prompt: 'Adult with a minor ankle sprain, oriented and conversational, wants to drive themselves to urgent care. No abnormal vitals.',
+      options: [
+        'Refuse the refusal \u2014 force transport regardless',
+        'Recommend evaluation, explain risks (worsening pain, need imaging), confirm understanding, give return precautions, document',
+        'Lecture them about the lawsuit risk to your service',
+        'Have them sign the form, walk away, don\u2019t document'
+      ],
+      correct: 1,
+      explanation: 'Low-risk refusal with capacity: recommend, explain risks, teach-back, return precautions, document. A safe refusal is forgiving and complete.'
+    },
+    {
+      prompt: '60 y/o post-syncope, BP 92/60, HR 118, pale. Refusing transport, "I feel fine now."',
+      options: [
+        'Accept the refusal \u2014 patient says they feel fine',
+        'Recommend strongly, explain specific risk (recurrent syncope, possible cardiac cause), request medical command consult before clearing',
+        'Tell them they will die if they refuse',
+        'Drive away \u2014 your shift is almost over'
+      ],
+      correct: 1,
+      explanation: 'High-risk refusal (abnormal vitals + concerning event). EMT-level practice: try to convince, then medical command before clearing. Document the whole chain.'
+    },
+    {
+      prompt: 'Heavily intoxicated college student wants to refuse after a fall, slurring, unable to repeat back what you said.',
+      options: [
+        'Accept the refusal \u2014 they\u2019re adult and consenting',
+        'Refusal is blocked: patient lacks capacity right now; protective custody / PD assist + transport per local protocol',
+        'Have a friend sign for them',
+        'Leave a wellness check note and clear'
+      ],
+      correct: 1,
+      explanation: 'Capacity is required for a valid refusal. Significant intoxication that prevents understanding = no capacity. Transport with appropriate support; involve PD if needed.'
+    },
+    {
+      prompt: '15 y/o on a college campus, parent unreachable, minor mechanism injury, wants to refuse.',
+      options: [
+        'Accept the refusal \u2014 minor mechanism is fine',
+        'Minor without a guardian \u2014 attempt parental contact, follow local minor consent protocol, consult medical command if needed',
+        'Tell them they\u2019re not allowed to refuse anything ever',
+        'Have campus security override the refusal'
+      ],
+      correct: 1,
+      explanation: 'Minors generally can\u2019t refuse unaided. Attempt to reach guardian, follow local protocol (school personnel + medical command often involved). Don\u2019t freelance.'
+    },
+    {
+      prompt: 'Patient says they want to harm themselves but currently refuses transport to the ED.',
+      options: [
+        'Accept the refusal \u2014 patient is alert',
+        'Hard-block: active SI is a no-refusal scenario. Stay with patient, request PD/crisis support per local protocol, transport when safe',
+        'Drive away and call PD later',
+        'Convince them to sign the refusal form'
+      ],
+      correct: 1,
+      explanation: 'Suicidal or homicidal ideation = no refusal accepted regardless of orientation. Patient/scene safety, mental-health hold pathway, transport. Document carefully.'
+    }
+  ],
+  trauma_triage_room: [
+    {
+      prompt: 'Pedestrian struck. Awake but confused. RR 30, weak radial pulse, uncontrolled thigh bleeding.',
+      options: [
+        'Apply a dressing later \u2014 do a full secondary survey first',
+        'Control the major bleeding immediately (tourniquet/direct pressure), request ALS, rapid transport to a trauma center',
+        'Splint the leg first',
+        'Walk the patient to the ambulance \u2014 they\u2019re still talking'
+      ],
+      correct: 1,
+      explanation: 'Major bleeding kills fast. ABCs with C for catastrophic hemorrhage first. AMS + tachypnea + weak pulse = shock physiology. Trauma center, ALS.'
+    },
+    {
+      prompt: 'MCI sort \u2014 patient is walking around, only has a wrist abrasion.',
+      options: [
+        'Red (Immediate)', 'Yellow (Delayed)', 'Green (Minor / walking wounded)', 'Black (Deceased / Expectant)'
+      ],
+      correct: 2,
+      explanation: 'START triage: ambulatory with minor injury = Green. Direct them to the green collection area for assessment after Red/Yellow are cleared.'
+    },
+    {
+      prompt: 'MCI sort \u2014 adult patient not breathing after airway repositioning.',
+      options: [
+        'Red (Immediate)', 'Yellow (Delayed)', 'Green (Minor)', 'Black (Deceased / Expectant)'
+      ],
+      correct: 3,
+      explanation: 'In adult START, apnea after a single airway reposition attempt = Black/Expectant in a true MCI with limited resources. Pediatric protocols (JumpSTART) differ \u2014 one rescue breath attempt first.'
+    },
+    {
+      prompt: 'MCI sort \u2014 patient RR 34, weak radial pulse, altered mental status.',
+      options: [
+        'Red (Immediate)', 'Yellow (Delayed)', 'Green (Minor)', 'Black (Deceased / Expectant)'
+      ],
+      correct: 0,
+      explanation: 'RR > 30, capillary refill / perfusion deficit, or AMS = Red/Immediate in START. Treat life-threats and move first.'
+    },
+    {
+      prompt: 'MCI sort \u2014 patient RR 20, follows commands, closed lower-leg fracture, stable vitals.',
+      options: [
+        'Red (Immediate)', 'Yellow (Delayed)', 'Green (Minor)', 'Black (Deceased / Expectant)'
+      ],
+      correct: 1,
+      explanation: 'Cannot walk (non-ambulatory) but breathing/perfusion/mental status all OK = Yellow/Delayed. Will need transport but can wait briefly.'
+    },
+    {
+      prompt: 'Motorcycle crash \u2014 helmeted, AMS, RR 22, BP 96/64, suspected pelvic injury, blood loss controlled.',
+      options: [
+        'Local community hospital \u2014 closest is best',
+        'Trauma center \u2014 rapid transport, ALS intercept if available, c-spine motion restriction, ongoing reassessment',
+        'Refusal \u2014 patient is conscious enough to decline',
+        'Stay on scene to fully package before moving'
+      ],
+      correct: 1,
+      explanation: 'Significant MOI + AMS + concerning vitals = trauma center destination. Quick on-scene time, motion restriction, ALS, frequent reassessment.'
+    }
+  ],
+  // ===== AEMT-ONLY ROOMS — own question pools =====
+  // These rooms are HIDDEN unless _aemtSessionUnlocked is set by the
+  // "AEMT" cheat code on the title screen. Once visible they still
+  // cost Respect to unlock, per spec. Content is fully separate from
+  // the EMT pools above — these are AEMT-scope only.
+  aemt_airway_lab: [
+    {
+      prompt: 'Adult cardiac arrest, BLS airway in place, BVM ventilation difficult with poor chest rise despite repositioning and 2-person technique.',
+      vitals: 'No spontaneous resp \u00b7 CPR in progress',
+      options: [
+        'Continue BVM only \u2014 supraglottic airways are not in AEMT scope',
+        'Place a supraglottic airway (King LT or i-gel per local protocol), confirm placement with auscultation + EtCO2, continue ventilations',
+        'Attempt endotracheal intubation',
+        'Stop ventilations \u2014 BVM clearly isn\u2019t working'
+      ],
+      correct: 1,
+      explanation: 'Supraglottic airways (King LT, i-gel, LMA) ARE within AEMT scope and indicated when BVM is failing in arrest. Confirm with bilateral breath sounds + waveform capnography.'
+    },
+    {
+      prompt: 'Suspected COPD exacerbation, awake and following commands, accessory muscle use, EtCO2 reading is 62 mmHg with a normal waveform.',
+      vitals: 'RR 28 labored \u00b7 SpO2 89% \u00b7 HR 118',
+      options: [
+        'EtCO2 of 62 is meaningless in a conscious patient',
+        'Elevated EtCO2 with a normal waveform = CO2 retention supporting respiratory failure; titrate O2 to ~88\u201392%, consider CPAP if protocol allows, escalate',
+        'Place supraglottic airway immediately',
+        'Withhold oxygen entirely \u2014 COPD patients can\u2019t tolerate it'
+      ],
+      correct: 1,
+      explanation: 'EtCO2 60+ with a square waveform in respiratory distress = hypoventilation / CO2 retention. AEMT response: titrated oxygen, CPAP if scope/protocol allow, transport.'
+    },
+    {
+      prompt: 'You place a supraglottic airway. After 2 ventilations, waveform capnography reads "0" and chest rise is absent.',
+      options: [
+        'Continue ventilating \u2014 the EtCO2 will catch up',
+        'Pull the device, resume BVM, and re-attempt placement after good ventilation is restored',
+        'Push harder on the bag',
+        'Disconnect capnography \u2014 it must be broken'
+      ],
+      correct: 1,
+      explanation: 'Zero EtCO2 + no chest rise after a supraglottic placement = misplacement or esophageal seating. Remove the device, BVM, then re-attempt or stay with BVM.'
+    },
+    {
+      prompt: 'Asthma exacerbation, awake, tripod position, audible wheezing, deteriorating. CPAP is within your protocol.',
+      vitals: 'RR 30 \u00b7 SpO2 86% \u00b7 HR 132',
+      options: [
+        'Lay patient flat and start BVM',
+        'Trial CPAP at 5\u201310 cmH2O \u2014 patient is alert with adequate drive; coach, monitor for fatigue, be ready for BVM if they decompensate',
+        'Place a supraglottic airway preemptively',
+        'Withhold CPAP \u2014 it\u2019s only for CHF'
+      ],
+      correct: 1,
+      explanation: 'CPAP is indicated in awake patients with adequate drive who are tiring (asthma, CHF, COPD). Coach + monitor; if mental status drops, CPAP comes off and BVM begins.'
+    },
+    {
+      prompt: 'Capnography on a stable patient with audible wheezing shows a sloping "shark-fin" upstroke instead of a square plateau.',
+      options: [
+        'Normal finding \u2014 ignore',
+        'Shark-fin = bronchospasm / lower-airway obstruction. Reassess and treat the underlying bronchospasm per protocol.',
+        'Indicates esophageal intubation',
+        'Indicates hyperventilation'
+      ],
+      correct: 1,
+      explanation: 'Shark-fin waveform = prolonged expiratory phase from obstructive lower-airway disease (asthma, COPD). Treat the bronchospasm; the waveform normalizes as obstruction relieves.'
+    },
+    {
+      prompt: 'Post-arrest ROSC patient, supraglottic in place, you need to confirm continued correct placement during transport.',
+      options: [
+        'Auscultation alone is sufficient \u2014 capnography is optional',
+        'Continuous waveform capnography is the gold standard for ongoing airway confirmation; auscultation + chest rise reassessed frequently as well',
+        'Pull the device and reassess BVM',
+        'Confirm placement only when the patient is moved'
+      ],
+      correct: 1,
+      explanation: 'Continuous waveform capnography is standard of care for monitoring ANY advanced airway. Sudden loss of waveform = check tube position, ventilation, and perfusion.'
+    }
+  ],
+  aemt_meds_lab: [
+    {
+      prompt: 'Anaphylaxis: 28 y/o, widespread urticaria, swelling lips/tongue, audible wheezing, hypotensive.',
+      vitals: 'BP 78/40 \u00b7 HR 132 \u00b7 SpO2 89%',
+      options: [
+        'IM diphenhydramine alone \u2014 epi is out of scope',
+        'IM epinephrine 0.3 mg (1 mg/mL, adult) into the lateral thigh; oxygen; rapid transport; reassess for second dose if no improvement',
+        'Oral Benadryl and discharge home',
+        'Withhold all medication \u2014 wait for ALS'
+      ],
+      correct: 1,
+      explanation: 'Anaphylaxis with airway/perfusion involvement = IM epinephrine FIRST. Adult dose 0.3 mg of 1 mg/mL solution into anterolateral thigh. Antihistamines and steroids are adjuncts, not substitutes.'
+    },
+    {
+      prompt: 'Unresponsive patient with pinpoint pupils, RR 6 shallow, opioid use suspected. Within AEMT scope.',
+      vitals: 'RR 6 \u00b7 SpO2 80% \u00b7 HR 56',
+      options: [
+        'Naloxone 2 mg IN (or 0.4 mg IV/IM per protocol), support ventilations, titrate to adequate respiratory effort \u2014 not full alertness',
+        'Naloxone 10 mg push for fastest reversal',
+        'Withhold naloxone \u2014 they\u2019re still breathing',
+        'Oral glucose'
+      ],
+      correct: 0,
+      explanation: 'Goal of naloxone is adequate breathing, not full reversal (which precipitates withdrawal). Standard adult: 2 mg IN or 0.4\u20132 mg IV/IM, titrated. Ventilate while it takes effect.'
+    },
+    {
+      prompt: 'Suspected acute asthma exacerbation in an adult, history of inhaler use. Within AEMT scope.',
+      options: [
+        'Solu-Medrol (methylprednisolone) 125 mg IV in the field for immediate bronchodilation',
+        'Albuterol nebulizer 2.5 mg in 3 mL NS; consider ipratropium per protocol; reassess; steroids (Solu-Medrol) per protocol help long-term but don\u2019t reverse acute bronchospasm',
+        'Tylenol 1000 mg PO',
+        'Glucagon 1 mg IM'
+      ],
+      correct: 1,
+      explanation: 'Albuterol (\u00b1 ipratropium) is the first-line bronchodilator. Methylprednisolone (Solu-Medrol) is anti-inflammatory \u2014 important but slow; it doesn\u2019t fix the acute squeeze. Acetaminophen and glucagon are unrelated.'
+    },
+    {
+      prompt: 'Known diabetic, BGL 38 mg/dL, unconscious and unable to protect airway. IV access available.',
+      options: [
+        'Oral glucose paste between gum and cheek',
+        'Dextrose 10% IV bolus (or D50 per protocol) titrated to mental status; if no IV, IM glucagon 1 mg as a bridge',
+        'Withhold all sugar until ALS arrives',
+        'Insulin 10 units IV'
+      ],
+      correct: 1,
+      explanation: 'Unconscious hypoglycemic = no oral glucose (aspiration risk). AEMT: IV dextrose (D10 or D50 per protocol) titrated to mentation; IM glucagon 1 mg if no IV access (slower onset).'
+    },
+    {
+      prompt: 'Stable adult with isolated, mild musculoskeletal pain after a minor fall. Vitals normal. Patient asks for "something for the pain."',
+      options: [
+        'IV fentanyl 100 mcg',
+        'PO acetaminophen (Tylenol) 650\u20131000 mg if within protocol, no contraindications (no recent acetaminophen use, no liver disease), patient can swallow',
+        'IM ketorolac 30 mg without checking allergies',
+        'Refuse all pain management'
+      ],
+      correct: 1,
+      explanation: 'For mild, isolated pain, oral acetaminophen (per protocol) is reasonable in patients without contraindications. Confirm last dose, allergy history, liver disease, ability to swallow.'
+    },
+    {
+      prompt: 'Symptomatic bradycardia after isolated overdose of a beta-blocker (propranolol). HR 38, BP 78/40, AMS. AEMT scope.',
+      vitals: 'BP 78/40 \u00b7 HR 38 \u00b7 RR 10',
+      options: [
+        'Naloxone 2 mg',
+        'Glucagon (per protocol, typically 3\u20135 mg IV/IM) for beta-blocker toxicity; oxygen; ALS / hospital notification',
+        'Albuterol nebulizer',
+        'Aspirin 324 mg'
+      ],
+      correct: 1,
+      explanation: 'Glucagon bypasses the beta receptor and is the AEMT-scope antidote for beta-blocker toxicity (and a temporizing agent in calcium-channel-blocker toxicity). Always with airway/circulation support and rapid transport.'
+    },
+    {
+      prompt: 'Cardiac arrest, in standard ACLS pathway. Asystole confirmed. Within AEMT scope per local protocol.',
+      options: [
+        'IM epinephrine 0.3 mg into the thigh',
+        'IV/IO epinephrine 1 mg (1:10,000 / 0.1 mg/mL) every 3\u20135 min per protocol, continued high-quality CPR, transport / ALS handoff',
+        'Solu-Medrol 125 mg IV',
+        'Naloxone first regardless of history'
+      ],
+      correct: 1,
+      explanation: 'Cardiac-arrest epinephrine = 1 mg of 1:10,000 (0.1 mg/mL) IV/IO every 3\u20135 minutes. The 1:1,000 (1 mg/mL) preparation is for IM anaphylaxis \u2014 different concentration, different route.'
+    }
+  ],
+  aemt_interventions_lab: [
+    {
+      prompt: 'CHF exacerbation \u2014 pink frothy sputum, JVD, bilateral crackles, awake and following commands, working hard to breathe.',
+      vitals: 'BP 168/96 \u00b7 RR 30 \u00b7 SpO2 86% \u00b7 HR 118',
+      options: [
+        'Lay supine and start BVM',
+        'Position upright (legs dependent), trial CPAP 5\u201310 cmH2O if alert with adequate respiratory drive, titrate to SpO2 / work of breathing, ALS / hospital notification',
+        'Insert OPA and ventilate via BVM',
+        'IV fluids 500 mL bolus'
+      ],
+      correct: 1,
+      explanation: 'Acute pulmonary edema with adequate drive = CPAP is the AEMT-level non-invasive workhorse. Upright, dependent legs, titrate pressure, monitor for fatigue. Avoid fluid boluses.'
+    },
+    {
+      prompt: 'Which AEMT-level non-invasive ventilation option best matches: "awake patient, adequate drive, type II respiratory failure (COPD with CO2 retention), needs both inspiratory AND expiratory support"?',
+      options: [
+        'CPAP \u2014 single fixed pressure throughout the cycle',
+        'BiPAP \u2014 separate IPAP / EPAP allows higher inspiratory support to offload work; better for type II failure where CO2 clearance is the problem',
+        'Endotracheal intubation \u2014 only option',
+        'High-flow nasal cannula instead'
+      ],
+      correct: 1,
+      explanation: 'CPAP = one pressure (good for type I / oxygenation failure / CHF). BiPAP = two pressures (IPAP > EPAP) which offload work of breathing and improve CO2 clearance \u2014 better for type II / COPD. Scope/equipment varies by service.'
+    },
+    {
+      prompt: 'Adult patient in compensated shock from a closed femur fracture with controlled bleeding. AEMT IV access is indicated. Best initial site/approach?',
+      options: [
+        'External jugular as first choice in every shock patient',
+        'Largest accessible peripheral vein in the upper extremity (antecubital often best); 18\u201320 gauge; consider IO if peripheral access fails AND patient is deteriorating per protocol',
+        'IO without attempting peripheral access first',
+        'Central venous line on scene'
+      ],
+      correct: 1,
+      explanation: 'Largest peripheral vein the player can reliably hit; antecubital is a common adult choice. IO is reserved for true vascular access failure plus a critical patient \u2014 not a first-line site.'
+    },
+    {
+      prompt: 'Profoundly altered, hypotensive septic patient. Two failed peripheral IV attempts and the patient is deteriorating. Local protocol permits IO.',
+      options: [
+        'Keep attempting peripheral IVs only',
+        'Place an IO (proximal humerus or proximal tibia per training), confirm flush, secure, continue resuscitation per protocol',
+        'Withhold all fluids/meds until ED arrival',
+        'Cut down a vein on scene'
+      ],
+      correct: 1,
+      explanation: 'IO is appropriate when (1) the patient needs vascular access urgently and (2) peripheral access has failed or is impossible. Both criteria are met here; place the IO per training, confirm flush, secure, and resuscitate.'
+    },
+    {
+      prompt: 'Awake CHF patient on CPAP at 7.5 cmH2O begins to decline: rising fatigue, SpO2 falls to 84% despite CPAP, then mental status drops.',
+      options: [
+        'Increase CPAP to 15 cmH2O and continue',
+        'CPAP is failing \u2014 remove the mask, BVM with supplemental oxygen, prepare advanced airway, escalate to ALS / hospital',
+        'Apply a second CPAP mask on top',
+        'Stop oxygen entirely'
+      ],
+      correct: 1,
+      explanation: 'CPAP requires an awake patient with adequate drive. Falling mental status = failure; transition to BVM and prepare for advanced airway. Don\u2019t keep escalating pressure on a tiring patient.'
+    },
+    {
+      prompt: 'For an isothermic IV bolus in a normotensive adult trauma patient with controlled bleeding (no shock), AEMT scope:',
+      options: [
+        '1000 mL bolus right away regardless of vitals',
+        'Avoid large volume fluids in a hemodynamically stable trauma patient; small titrated boluses ONLY if perfusion deteriorates, per protocol \u2014 the goal is permissive hypotension, not over-resuscitation',
+        'Start an epi infusion',
+        'Withhold all IV access until in the ED'
+      ],
+      correct: 1,
+      explanation: 'Modern trauma fluid resuscitation favors permissive hypotension \u2014 large-volume crystalloid in stable trauma patients dilutes clotting factors and worsens outcomes. Titrate small boluses to clinical signs per local protocol.'
+    }
+  ]
+};
+
+// Per-room stats: { attempts, bestScore, lastScore, lastMax, perfectRuns }
+let _trainingStats = {};
+// Session-scoped flag: which rooms have already paid the "first pass"
+// Respect reward this game-load. Cleared on page reload.
+let _trainingSessionRewarded = {};
+
+let trainingState = {
+  active: false, roomId: null, type: null,
+  questions: [], idx: 0, score: 0, answers: [], awaitingNext: false
+};
+
+function _trainingStatsLoad() {
+  _trainingStats = {};
+  try {
+    const raw = localStorage.getItem(_TRAINING_STATS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') _trainingStats = parsed;
+    }
+  } catch (_e) {}
+  TRAINING_ROOMS.forEach(r => {
+    if (!_trainingStats[r.id]) {
+      _trainingStats[r.id] = { attempts:0, bestScore:0, lastScore:0, lastMax:0, perfectRuns:0 };
+    }
+  });
+}
+function _trainingStatsSave() {
+  try { localStorage.setItem(_TRAINING_STATS_KEY, JSON.stringify(_trainingStats)); } catch (_e) {}
+}
+function isTrainingRoomUnlocked(roomId) {
+  try { return (respectState.owned.trainingRooms || []).indexOf(roomId) !== -1; }
+  catch (_e) { return false; }
+}
+function _trainingFeedback(msg, color) {
+  const fb = document.getElementById('training-feedback');
+  if (!fb) return;
+  fb.textContent = msg || '';
+  fb.style.color = color || '#06d6a0';
+  clearTimeout(_trainingFeedback._t);
+  if (msg) {
+    _trainingFeedback._t = setTimeout(() => {
+      try { fb.textContent = ''; } catch (_e) {}
+    }, 2400);
+  }
+}
+function _trainingEscape(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'
+  }[c]));
+}
+
+function openTrainingMenu() {
+  try { renderTrainingMenu(); } catch (_e) {}
+  const s = document.getElementById('training-screen');
+  if (s) s.style.display = 'flex';
+}
+function closeTrainingMenu() {
+  const s = document.getElementById('training-screen');
+  if (s) s.style.display = 'none';
+}
+function renderTrainingMenu() {
+  const amt = document.getElementById('training-respect-amount');
+  if (amt) amt.textContent = (respectState.totalRespect | 0).toLocaleString();
+  const list = document.getElementById('training-room-list');
+  if (!list) return;
+  let html = '';
+  // Stage 4 QOL: filter out AEMT rooms unless the AEMT code was entered
+  // on the title screen THIS session. Same gate as the shop render.
+  const visibleRooms = TRAINING_ROOMS.filter(r => !r.aemtOnly || _aemtSessionUnlocked);
+  visibleRooms.forEach(room => {
+    const unlocked = isTrainingRoomUnlocked(room.id);
+    const stats = _trainingStats[room.id] ||
+      { attempts:0, bestScore:0, lastScore:0, lastMax:0, perfectRuns:0 };
+    const cardBg = unlocked ? 'rgba(6,214,160,0.06)' : 'rgba(255,255,255,0.03)';
+    const cardBorder = unlocked ? '#06d6a0' : '#3a3a4e';
+    const lockedRow = unlocked
+      ? ''
+      : '<div style="font-family:\'Courier New\',monospace; font-size:10px; color:#ffd166; letter-spacing:1px; margin:6px 0;">' +
+          'COST: ' + room.cost + ' RESPECT' +
+        '</div>';
+    const statsRow = unlocked && stats.attempts > 0
+      ? '<div style="font-family:\'Courier New\',monospace; font-size:10px; color:#a8b0c4; letter-spacing:1px; margin:6px 0; line-height:1.5;">' +
+          'ATTEMPTS: ' + stats.attempts + ' \u00b7 ' +
+          'BEST: ' + stats.bestScore + '/' +
+            (stats.lastMax || (TRAINING_QUESTIONS[room.id] || []).length) + ' \u00b7 ' +
+          'PERFECT: ' + (stats.perfectRuns || 0) +
+        '</div>'
+      : (unlocked
+          ? '<div style="font-family:\'Courier New\',monospace; font-size:10px; color:#a8b0c4; letter-spacing:1px; margin:6px 0;">' +
+              'NEVER PLAYED' +
+            '</div>'
+          : '');
+    let btnHtml;
+    if (unlocked) {
+      btnHtml = '<button class="primary training-enter-btn" data-rid="' + _trainingEscape(room.id) + '" ' +
+                'style="width:100%; padding:8px 12px; font-size:11px;">\u25b6 ENTER</button>';
+    } else if (respectState.totalRespect >= room.cost) {
+      btnHtml = '<button class="primary training-unlock-btn" data-rid="' + _trainingEscape(room.id) + '" ' +
+                'style="width:100%; padding:8px 12px; font-size:11px;">UNLOCK \u00b7 ' + room.cost + '</button>';
+    } else {
+      const need = room.cost - respectState.totalRespect;
+      btnHtml = '<button class="secondary" disabled ' +
+                'style="width:100%; padding:8px 12px; font-size:11px; opacity:0.55; cursor:not-allowed;">' +
+                'NEED ' + need + ' MORE</button>';
+    }
+    html +=
+      '<div style="display:flex; flex-direction:column; gap:4px; padding:12px 14px; height:100%; ' +
+              'background:' + cardBg + '; border:1px solid ' + cardBorder + '; border-radius:6px;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">' +
+          '<span style="color:#f4f1de; font-weight:bold; font-size:13px; letter-spacing:1px;">' +
+            _trainingEscape(room.name) + '</span>' +
+          (unlocked
+            ? '<span style="font-size:9px; color:#06d6a0; font-weight:bold; letter-spacing:1.5px;">UNLOCKED</span>'
+            : '<span style="font-size:9px; color:#a8b0c4; letter-spacing:1.5px;">LOCKED</span>') +
+        '</div>' +
+        '<div style="color:#a8b0c4; font-size:11px; line-height:1.4;">' +
+          _trainingEscape(room.description) +
+        '</div>' +
+        lockedRow + statsRow +
+        '<div style="margin-top:auto; padding-top:8px;">' + btnHtml + '</div>' +
+      '</div>';
+  });
+  list.innerHTML = html;
+  list.querySelectorAll('.training-enter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rid = btn.getAttribute('data-rid');
+      startTrainingMinigame(rid);
+    });
+  });
+  list.querySelectorAll('.training-unlock-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rid = btn.getAttribute('data-rid');
+      const item = RESPECT_SHOP_ITEMS.find(it => it.category === 'trainingRooms' && it.applyId === rid);
+      if (!item) return;
+      const res = buyRespectItem(item.id);
+      if (res.ok) {
+        _trainingFeedback('UNLOCKED: ' + res.item.name, '#06d6a0');
+        renderTrainingMenu();
+      } else if (res.reason === 'insufficient') {
+        _trainingFeedback('NOT ENOUGH RESPECT', '#ef476f');
+      } else {
+        _trainingFeedback('UNLOCK FAILED', '#ef476f');
+      }
+    });
+  });
+}
+
+function startTrainingMinigame(roomId) {
+  const room = TRAINING_ROOMS.find(r => r.id === roomId);
+  if (!room) return;
+  if (!isTrainingRoomUnlocked(roomId)) {
+    _trainingFeedback('ROOM LOCKED \u2014 unlock first', '#ef476f');
+    return;
+  }
+  const questions = TRAINING_QUESTIONS[roomId] || [];
+  if (questions.length === 0) {
+    _trainingFeedback('NO QUESTIONS DEFINED', '#ef476f');
+    return;
+  }
+  trainingState = {
+    active: true, roomId: roomId, type: room.type,
+    questions: questions.slice(), idx: 0, score: 0, answers: [], awaitingNext: false
+  };
+  const titleEl = document.getElementById('training-game-title');
+  if (titleEl) titleEl.textContent = room.name.toUpperCase();
+  const screen = document.getElementById('training-game-screen');
+  if (screen) screen.style.display = 'flex';
+  renderTrainingQuestion();
+}
+function renderTrainingQuestion() {
+  const q = trainingState.questions[trainingState.idx];
+  if (!q) { finishTrainingMinigame(); return; }
+  const total = trainingState.questions.length;
+  const prog = document.getElementById('training-game-progress');
+  if (prog) prog.textContent = 'Q ' + (trainingState.idx + 1) + ' / ' + total;
+  const scoreV = document.getElementById('training-game-score-val');
+  if (scoreV) scoreV.textContent = String(trainingState.score);
+  const promptEl = document.getElementById('training-game-prompt');
+  if (promptEl) promptEl.textContent = q.prompt || '';
+  const vitalsEl = document.getElementById('training-game-vitals');
+  if (vitalsEl) {
+    if (q.vitals) { vitalsEl.textContent = q.vitals; vitalsEl.style.display = 'block'; }
+    else { vitalsEl.style.display = 'none'; }
+  }
+  const optsEl = document.getElementById('training-game-options');
+  if (optsEl) {
+    optsEl.innerHTML = '';
+    (q.options || []).forEach((opt, i) => {
+      const b = document.createElement('button');
+      b.className = 'secondary training-game-option';
+      b.style.cssText =
+        'padding:10px 14px; text-align:left; font-size:12px; line-height:1.4; ' +
+        'white-space:normal; min-height:auto; letter-spacing:0;';
+      b.textContent = (String.fromCharCode(65 + i)) + '. ' + opt;
+      b.addEventListener('click', () => submitTrainingAnswer(i));
+      optsEl.appendChild(b);
+    });
+  }
+  const expEl = document.getElementById('training-game-explanation');
+  if (expEl) { expEl.style.display = 'none'; expEl.textContent = ''; }
+  const nextBtn = document.getElementById('training-game-next-btn');
+  if (nextBtn) nextBtn.style.display = 'none';
+  trainingState.awaitingNext = false;
+}
+function submitTrainingAnswer(answerIdx) {
+  if (trainingState.awaitingNext) return;
+  const q = trainingState.questions[trainingState.idx];
+  if (!q) return;
+  const correct = (answerIdx === q.correct);
+  if (correct) trainingState.score++;
+  trainingState.answers.push({ correct: correct, picked: answerIdx });
+  trainingState.awaitingNext = true;
+  const optsEl = document.getElementById('training-game-options');
+  if (optsEl) {
+    const btns = optsEl.querySelectorAll('.training-game-option');
+    btns.forEach((b, i) => {
+      b.disabled = true;
+      b.style.cursor = 'default';
+      if (i === q.correct) {
+        b.style.background = 'rgba(6,214,160,0.18)';
+        b.style.borderColor = '#06d6a0';
+        b.style.color = '#06d6a0';
+      } else if (i === answerIdx && !correct) {
+        b.style.background = 'rgba(239,71,111,0.16)';
+        b.style.borderColor = '#ef476f';
+        b.style.color = '#ef476f';
+      } else {
+        b.style.opacity = '0.5';
+      }
+    });
+  }
+  const expEl = document.getElementById('training-game-explanation');
+  if (expEl) {
+    const head = correct
+      ? '<span style="color:#06d6a0; font-weight:bold; letter-spacing:1.5px;">\u2713 CORRECT &middot; </span>'
+      : '<span style="color:#ef476f; font-weight:bold; letter-spacing:1.5px;">\u2717 NOT QUITE &middot; </span>';
+    expEl.innerHTML = head + _trainingEscape(q.explanation || '');
+    expEl.style.display = 'block';
+  }
+  const scoreV = document.getElementById('training-game-score-val');
+  if (scoreV) scoreV.textContent = String(trainingState.score);
+  const nextBtn = document.getElementById('training-game-next-btn');
+  if (nextBtn) {
+    nextBtn.style.display = '';
+    const isLast = (trainingState.idx >= trainingState.questions.length - 1);
+    nextBtn.textContent = isLast ? 'Finish' : 'Next';
+  }
+}
+function nextTrainingQuestion() {
+  if (!trainingState.awaitingNext) return;
+  trainingState.idx++;
+  if (trainingState.idx >= trainingState.questions.length) {
+    finishTrainingMinigame();
+  } else {
+    renderTrainingQuestion();
+  }
+}
+function finishTrainingMinigame() {
+  const total = trainingState.questions.length;
+  const score = trainingState.score;
+  const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+  const passed = pct >= 70;
+  const perfect = (score === total);
+  const roomId = trainingState.roomId;
+  if (roomId && _trainingStats[roomId]) {
+    const s = _trainingStats[roomId];
+    s.attempts = (s.attempts | 0) + 1;
+    s.lastScore = score;
+    s.lastMax = total;
+    if (score > (s.bestScore | 0)) s.bestScore = score;
+    if (perfect) s.perfectRuns = (s.perfectRuns | 0) + 1;
+    _trainingStatsSave();
+  }
+  let respectGain = 0;
+  let rewardNote = '';
+  if (roomId && passed && !_trainingSessionRewarded[roomId]) {
+    respectGain = perfect ? 20 : 10;
+    _trainingSessionRewarded[roomId] = true;
+    try {
+      respectState.totalRespect += respectGain;
+      respectState.lifetimeRespectEarned += respectGain;
+      saveRespectState();
+      _renderTitleRespectDisplay();
+    } catch (_e) {}
+    rewardNote = ' &middot; <span style="color:#ffd166; font-weight:bold;">+' + respectGain + ' RESPECT</span>';
+  } else if (roomId && passed && _trainingSessionRewarded[roomId]) {
+    rewardNote = ' &middot; <span style="color:#a8b0c4;">practice run \u2014 no respect this session</span>';
+  }
+  const promptEl = document.getElementById('training-game-prompt');
+  if (promptEl) {
+    promptEl.innerHTML =
+      '<div style="text-align:center; font-size:18px; font-weight:bold; letter-spacing:2px; ' +
+              'color:' + (passed ? '#06d6a0' : '#ef476f') + '; margin-bottom:6px;">' +
+        (perfect ? 'PERFECT RUN' : (passed ? 'PASSED' : 'KEEP PRACTICING')) +
+      '</div>' +
+      '<div style="text-align:center; font-family:\'Courier New\',monospace; font-size:14px; ' +
+              'color:#f4f1de; letter-spacing:1.5px;">' +
+        'SCORE: <b style="color:#ffd166;">' + score + ' / ' + total + '</b> (' + pct + '%)' +
+        rewardNote +
+      '</div>';
+  }
+  const vitalsEl = document.getElementById('training-game-vitals');
+  if (vitalsEl) vitalsEl.style.display = 'none';
+  const optsEl = document.getElementById('training-game-options');
+  if (optsEl) {
+    optsEl.innerHTML = '';
+    const wrong = trainingState.answers.map((a, i) => a.correct ? null : i).filter(x => x !== null);
+    if (wrong.length > 0) {
+      const head = document.createElement('div');
+      head.style.cssText = 'font-family:"Courier New",monospace; font-size:11px; ' +
+                           'color:#a8b0c4; letter-spacing:1.5px; margin-top:4px;';
+      head.textContent = 'REVIEW (' + wrong.length + '):';
+      optsEl.appendChild(head);
+      wrong.forEach(qi => {
+        const q = trainingState.questions[qi];
+        if (!q) return;
+        const div = document.createElement('div');
+        div.style.cssText =
+          'padding:8px 10px; border-left:2px solid #ef476f; background:rgba(239,71,111,0.06); ' +
+          'border-radius:3px; font-size:11.5px; line-height:1.45; color:#cbd2dc;';
+        div.innerHTML =
+          '<div style="color:#f4f1de; margin-bottom:3px;"><b>Q' + (qi + 1) + ':</b> ' +
+            _trainingEscape((q.prompt || '').slice(0, 100)) +
+            ((q.prompt || '').length > 100 ? '\u2026' : '') + '</div>' +
+          '<div style="color:#06d6a0;"><b>Correct:</b> ' + _trainingEscape(q.options[q.correct] || '') + '</div>';
+        optsEl.appendChild(div);
+      });
+    } else {
+      const head = document.createElement('div');
+      head.style.cssText = 'font-family:"Courier New",monospace; font-size:11px; ' +
+                           'color:#06d6a0; letter-spacing:1.5px; margin-top:4px; text-align:center;';
+      head.textContent = '\u2728 No misses to review';
+      optsEl.appendChild(head);
+    }
+  }
+  const expEl = document.getElementById('training-game-explanation');
+  if (expEl) expEl.style.display = 'none';
+  const nextBtn = document.getElementById('training-game-next-btn');
+  if (nextBtn) { nextBtn.style.display = ''; nextBtn.textContent = 'Done'; }
+  const scoreV = document.getElementById('training-game-score-val');
+  if (scoreV) scoreV.textContent = String(score);
+  trainingState.active = false;
+}
+function closeTrainingGame() {
+  const s = document.getElementById('training-game-screen');
+  if (s) s.style.display = 'none';
+  trainingState = {
+    active: false, roomId: null, type: null,
+    questions: [], idx: 0, score: 0, answers: [], awaitingNext: false
+  };
+  try { renderTrainingMenu(); } catch (_e) {}
+}
+
+function _trainingInit() {
+  _trainingStatsLoad();
+  const tBtn = document.getElementById('title-training-btn');
+  if (tBtn) tBtn.addEventListener('click', openTrainingMenu);
+  const backBtn = document.getElementById('training-back-btn');
+  if (backBtn) backBtn.addEventListener('click', closeTrainingMenu);
+  const quitBtn = document.getElementById('training-game-quit-btn');
+  if (quitBtn) quitBtn.addEventListener('click', closeTrainingGame);
+  const nextBtn = document.getElementById('training-game-next-btn');
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    if (trainingState.active) {
+      nextTrainingQuestion();
+    } else {
+      closeTrainingGame();
+    }
+  });
+}
+// =====================================================================
+// END TRAINING ROOMS
+// =====================================================================
+
 // ----- INIT WIRING ------------------------------------------------
 function _respectShopInit() {
   // Load persisted state.
@@ -52091,6 +54269,7 @@ function boot() {
   // shop buttons, and apply any equipped cosmetics. Called after
   // setupSelect so all the DOM elements + their other handlers exist.
   try { _respectShopInit(); } catch (_eRS) {}
+  try { _trainingInit(); } catch (_eTI) {}
   requestAnimationFrame(loop);
   // Stage 1.6: play the startup boot animation. The game loop and select
   // setup are already wired up; the overlay just paints over everything
